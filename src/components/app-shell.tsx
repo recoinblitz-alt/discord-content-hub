@@ -36,17 +36,7 @@ const nav = [
   { to: "/settings", label: "Servers & Bots", icon: Server },
 ] as const;
 
-export function AppShell({
-  title,
-  subtitle,
-  actions,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
+export function AppFrame({ children }: { children: ReactNode }) {
   const {
     organizations,
     currentOrg,
@@ -184,42 +174,63 @@ export function AppShell({
         </aside>
 
         <main className="min-w-0 flex-1">
-          <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
-            <div className="flex flex-wrap items-center gap-3 px-5 py-4 md:px-8">
-              <div className="min-w-0 flex-1">
-                <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
-                {subtitle && (
-                  <p className="truncate text-sm text-muted-foreground">{subtitle}</p>
-                )}
+          <div className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur lg:hidden">
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <div className="flex items-center gap-2 font-display text-sm font-semibold">
+                <Zap className="h-4 w-4 text-blurple" /> Relaystack
               </div>
-              <div className="flex items-center gap-2">{actions}</div>
-              <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1.5 lg:hidden">
-                <div className="text-xs font-medium">{currentUser.name}</div>
-                <button
-                  type="button"
-                  onClick={() => void signOut()}
-                  className="text-muted-foreground"
-                  title="Sign out"
-                >
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" onClick={toggle} title="Change theme">
+                  {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => void signOut()} title="Sign out">
                   <LogOut className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
-            <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2 lg:hidden">
+            <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2">
               {nav.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
-                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs text-muted-foreground hover:bg-accent"
+                  preload="intent"
+                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
                 >
                   {item.label}
                 </Link>
               ))}
             </div>
-          </header>
-          <div className="px-5 py-6 md:px-8">{children}</div>
+          </div>
+          {children}
         </main>
       </div>
+    </div>
+  );
+}
+
+export function AppShell({
+  title,
+  subtitle,
+  actions,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <div className="page-enter">
+      <header className="sticky top-[105px] z-20 border-b border-border bg-background/85 backdrop-blur lg:top-0">
+        <div className="flex flex-wrap items-center gap-3 px-5 py-4 md:px-8">
+          <div className="min-w-0 flex-1">
+            <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
+            {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
+          </div>
+          <div className="flex items-center gap-2">{actions}</div>
+        </div>
+      </header>
+      <div className="px-5 py-6 md:px-8">{children}</div>
     </div>
   );
 }

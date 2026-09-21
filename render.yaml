@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: relaystack
+    runtime: node
+    plan: starter
+    buildCommand: bun install --frozen-lockfile && bun run build:render
+    preDeployCommand: bun run db:migrate
+    startCommand: bun run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NITRO_PRESET
+        value: node-server
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: LOVABLE_DB_MIGRATION_URL
+        sync: false
+      - key: PUBLISH_CRON_SECRET
+        sync: false
+
+  - type: cron
+    name: relaystack-publish-due
+    runtime: node
+    schedule: "* * * * *"
+    buildCommand: ""
+    startCommand: node -e 'fetch(process.env.APP_URL+"/api/public/publish-due",{method:"POST",headers:{authorization:"Bearer "+process.env.PUBLISH_CRON_SECRET}}).then(async r=>{if(!r.ok)throw new Error(await r.text());console.log(await r.text())})'
+    envVars:
+      - key: APP_URL
+        sync: false
+      - key: PUBLISH_CRON_SECRET
+        sync: false
