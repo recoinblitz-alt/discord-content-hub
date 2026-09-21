@@ -210,9 +210,10 @@ function InvitePanel({ orgId }: { orgId: string }) {
         toast.error(result.message);
         return;
       }
-      setLink(`${window.location.origin}/invite/${result.token}`);
+      setLink(`${window.location.origin}/invite/${result.token}?invited=1`);
       setEmail("");
-      toast.success(result.message);
+      if (result.emailSent) toast.success(result.message);
+      else toast.warning(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the invite");
     } finally {

@@ -120,6 +120,13 @@
       "when": 1790007392556,
       "tag": "0016_restrict_member_and_profile_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790008609623,
+      "tag": "0017_harden_invitation_readiness",
+      "breakpoints": true
     }
   ]
 }

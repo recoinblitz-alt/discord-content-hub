@@ -581,6 +581,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_org_invite_preview: { Args: { _token: string }; Returns: Json }
       has_org_role: {
         Args: {
           _org: string
