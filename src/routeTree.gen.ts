@@ -28,6 +28,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 import { Route as InviteTokenRouteImport } from './routes/invite.$token'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicPublishDueRouteImport } from './routes/api/public/publish-due'
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 
@@ -125,6 +126,11 @@ const InviteTokenRoute = InviteTokenRouteImport.update({
   path: '/invite/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPublishDueRoute = ApiPublicPublishDueRouteImport.update({
   id: '/api/public/publish-due',
   path: '/api/public/publish-due',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
   '/invite/$token': typeof InviteTokenRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
 }
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/templates'
     | '/invite/$token'
+    | '/api/public/health'
     | '/api/public/publish-due'
     | '/api/public/media/$'
   fileRoutesByTo: FileRoutesByTo
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/team'
     | '/templates'
     | '/invite/$token'
+    | '/api/public/health'
     | '/api/public/publish-due'
     | '/api/public/media/$'
   id:
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/_authenticated/team'
     | '/_authenticated/templates'
     | '/invite/$token'
+    | '/api/public/health'
     | '/api/public/publish-due'
     | '/api/public/media/$'
   fileRoutesById: FileRoutesById
@@ -284,6 +296,7 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   InviteTokenRoute: typeof InviteTokenRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicPublishDueRoute: typeof ApiPublicPublishDueRoute
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
 }
@@ -423,6 +436,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof InviteTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/publish-due': {
       id: '/api/public/publish-due'
       path: '/api/public/publish-due'
@@ -479,6 +499,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   InviteTokenRoute: InviteTokenRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicPublishDueRoute: ApiPublicPublishDueRoute,
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
 }
