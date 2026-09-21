@@ -189,7 +189,7 @@ function InvitePanel({ orgId }: { orgId: string }) {
         Share the link you get back. They join with the role you pick as soon as they sign in with
         that email.
       </p>
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+      <div className="mt-4 flex flex-col gap-2">
         <input
           type="email"
           value={email}
