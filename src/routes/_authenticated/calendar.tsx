@@ -9,7 +9,7 @@ import { fullDate } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { STATUS_LABELS, type Post, type PostStatus } from "@/lib/types";
 
-export const Route = createFileRoute("/calendar")({
+export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
       { title: "Content calendar — Relaystack" },

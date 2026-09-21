@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { fullDate, relative } from "@/lib/format";
 import { useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/approvals")({
+export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
     meta: [
       { title: "Approval queue — Relaystack" },

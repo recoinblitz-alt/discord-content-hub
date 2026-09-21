@@ -15,7 +15,7 @@ import { fullDate, relative } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Relaystack Discord content ops" },

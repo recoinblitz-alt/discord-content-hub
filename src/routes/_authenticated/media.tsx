@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { fullDate } from "@/lib/format";
 import { useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/media")({
+export const Route = createFileRoute("/_authenticated/media")({
   head: () => ({
     meta: [
       { title: "Media library — Relaystack" },

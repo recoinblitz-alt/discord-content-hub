@@ -7,7 +7,7 @@ import { fullDate } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import type { AuditAction } from "@/lib/types";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
       { title: "Audit trail — Relaystack" },

@@ -254,3 +254,5 @@ export const TIMEZONES = [
   "Asia/Singapore",
   "Australia/Sydney",
 ];
+
+export type MediaAssetKind = MediaAsset["kind"];

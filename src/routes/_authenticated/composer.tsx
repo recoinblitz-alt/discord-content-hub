@@ -36,7 +36,7 @@ interface ComposerSearch {
   templateId?: string;
 }
 
-export const Route = createFileRoute("/composer")({
+export const Route = createFileRoute("/_authenticated/composer")({
   validateSearch: (search: Record<string, unknown>): ComposerSearch => {
     const out: ComposerSearch = {};
     if (typeof search["postId"] === "string") out.postId = search["postId"];

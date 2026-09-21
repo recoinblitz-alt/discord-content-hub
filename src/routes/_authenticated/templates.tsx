@@ -7,7 +7,7 @@ import { DiscordPreview } from "@/components/discord-preview";
 import { Button } from "@/components/ui/button";
 import { useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/templates")({
+export const Route = createFileRoute("/_authenticated/templates")({
   head: () => ({
     meta: [
       { title: "Template library — Relaystack" },

@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { useStore } from "@/lib/store";
 import { ROLE_LABELS, permissionsFor, type Role } from "@/lib/types";
 
-export const Route = createFileRoute("/team")({
+export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({
     meta: [
       { title: "Team & roles — Relaystack" },

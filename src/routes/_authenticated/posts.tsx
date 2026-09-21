@@ -11,7 +11,7 @@ import { fullDate, relative } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 
-export const Route = createFileRoute("/posts")({
+export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
       { title: "All posts — Relaystack" },
