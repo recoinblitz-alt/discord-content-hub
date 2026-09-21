@@ -300,6 +300,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orgMembers: data.members,
       orgTemplates: data.templates,
       orgMedia: data.media,
+      orgEvents: events,
       state: {
         organizations: memberships.map((m) => m.org),
         members: data.members,
