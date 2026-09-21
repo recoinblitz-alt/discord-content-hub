@@ -174,7 +174,9 @@ function Composer() {
 
   const saveDraft = () =>
     run(async () => {
-      await persist();
+      await persist({
+        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
+      });
       toast.success("Draft saved");
     });
 
