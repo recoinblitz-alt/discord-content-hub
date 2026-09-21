@@ -6,7 +6,7 @@ services:
     buildCommand: npm install && npm run build:render
     preDeployCommand: npm run db:migrate
     startCommand: npm run start
-    healthCheckPath: /
+    healthCheckPath: /api/public/health
     envVars:
       - key: NODE_VERSION
         value: "22"
