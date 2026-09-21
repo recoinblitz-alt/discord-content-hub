@@ -14,13 +14,13 @@ import { useWorkspace } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
     meta: [
-      { title: "Approval queue — Relaystack" },
+      { title: "Approval queue — MUNO" },
       {
         name: "description",
         content:
           "Review pending Discord submissions with the exact preview, then approve, reject or request changes.",
       },
-      { property: "og:title", content: "Approval queue — Relaystack" },
+      { property: "og:title", content: "Approval queue — MUNO" },
       {
         property: "og:description",
         content: "Approve, reject or request changes on pending Discord announcements.",

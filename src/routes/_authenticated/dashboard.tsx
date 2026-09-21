@@ -18,13 +18,13 @@ import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Relaystack Discord content ops" },
+      { title: "Dashboard — MUNO Discord content ops" },
       {
         name: "description",
         content:
           "Pipeline overview of Discord drafts, approvals, scheduled announcements and delivery health.",
       },
-      { property: "og:title", content: "Dashboard — Relaystack Discord content ops" },
+      { property: "og:title", content: "Dashboard — MUNO Discord content ops" },
       {
         property: "og:description",
         content: "Pipeline overview of Discord drafts, approvals and scheduled announcements.",

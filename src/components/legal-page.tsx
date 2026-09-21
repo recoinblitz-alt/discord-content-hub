@@ -1,6 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, Zap } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import type { ReactNode } from "react";
+
+import { BrandLogo } from "@/components/brand-logo";
 
 export const LEGAL_LINKS = [
   { to: "/terms", label: "Terms & Conditions" },
@@ -9,8 +11,8 @@ export const LEGAL_LINKS = [
   { to: "/support", label: "Support" },
 ] as const;
 
-export const COMPANY_NAME = "Relaystack";
-export const CONTACT_EMAIL = "support@relaystack.app";
+export const COMPANY_NAME = "MUNO";
+export const CONTACT_EMAIL = "abhishek@solvextra.com";
 
 export function LegalFooter({ className = "" }: { className?: string }) {
   return (
@@ -40,9 +42,7 @@ export function LegalPage({
     <div className="min-h-screen bg-background text-foreground">
       <header className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
-            <Zap className="h-4 w-4" />
-          </div>
+          <BrandLogo className="h-9 w-9" />
           <span className="font-display text-sm font-semibold">{COMPANY_NAME}</span>
         </Link>
         <Link

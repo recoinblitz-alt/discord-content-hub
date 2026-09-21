@@ -17,13 +17,13 @@ import { useWorkspace } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated/templates")({
   head: () => ({
     meta: [
-      { title: "Template library — Relaystack" },
+      { title: "Template library — MUNO" },
       {
         name: "description",
         content:
           "Reusable Discord announcement templates for tournaments, giveaways, patch notes, events and AMAs.",
       },
-      { property: "og:title", content: "Template library — Relaystack" },
+      { property: "og:title", content: "Template library — MUNO" },
       {
         property: "og:description",
         content: "Reusable Discord announcement templates ready to drop into a post.",
@@ -174,7 +174,7 @@ function Templates() {
             <div className="lg:sticky lg:top-28 lg:self-start">
               <h2 className="mb-2 text-sm font-semibold">Preview — {selected.name}</h2>
               <DiscordPreview
-                botName={bot?.botName ?? "Relaystack Bot"}
+                botName={bot?.botName ?? "MUNO Bot"}
                 botAvatar={bot?.botAvatar ?? ""}
                 kind={selected.kind}
                 content={selected.content}
@@ -194,7 +194,7 @@ function Templates() {
         onOpenChange={setDialogOpen}
         draft={draft}
         title={editingId ? "Edit template" : "New template"}
-        botName={bot?.botName ?? "Relaystack Bot"}
+        botName={bot?.botName ?? "MUNO Bot"}
         botAvatar={bot?.botAvatar ?? ""}
         onSave={save}
       />

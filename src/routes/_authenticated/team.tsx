@@ -12,13 +12,13 @@ import { ROLE_LABELS, permissionsFor, type Role } from "@/lib/types";
 export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({
     meta: [
-      { title: "Team & roles — Relaystack" },
+      { title: "Team & roles — MUNO" },
       {
         name: "description",
         content:
           "Manage Super Admin, Admin, Approver and Normal User permissions and simulate any role.",
       },
-      { property: "og:title", content: "Team & roles — Relaystack" },
+      { property: "og:title", content: "Team & roles — MUNO" },
       {
         property: "og:description",
         content: "Role-based permissions for Discord content creation and approval.",

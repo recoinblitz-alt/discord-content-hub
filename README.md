@@ -1,4 +1,4 @@
-# Relaystack
+# MUNO
 
 Discord content planning, approval, scheduling, and bot delivery built with TanStack Start, React, and Supabase.
 

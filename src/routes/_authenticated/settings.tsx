@@ -34,13 +34,13 @@ import { useWorkspace } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
     meta: [
-      { title: "Servers & Bots — Relaystack" },
+      { title: "Servers & Bots — MUNO" },
       {
         name: "description",
         content:
           "Connect your Discord bot, import servers and channels, and choose which channels need approval.",
       },
-      { property: "og:title", content: "Servers & Bots — Relaystack" },
+      { property: "og:title", content: "Servers & Bots — MUNO" },
       {
         property: "og:description",
         content: "Connect a Discord bot and set per-channel approval rules.",

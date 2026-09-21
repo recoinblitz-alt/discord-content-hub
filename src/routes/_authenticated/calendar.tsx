@@ -32,13 +32,13 @@ import {
 export const Route = createFileRoute("/_authenticated/calendar")({
   head: () => ({
     meta: [
-      { title: "Content calendar — Relaystack" },
+      { title: "Content calendar — MUNO" },
       {
         name: "description",
         content:
           "Month, week and list views of every scheduled post plus shared team events for the whole workspace.",
       },
-      { property: "og:title", content: "Content calendar — Relaystack" },
+      { property: "og:title", content: "Content calendar — MUNO" },
       {
         property: "og:description",
         content: "Scheduled Discord posts and shared team events across servers and channels.",

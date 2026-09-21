@@ -5,16 +5,16 @@ import { CONTACT_EMAIL, COMPANY_NAME, LegalPage, Section } from "@/components/le
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms & Conditions — Relaystack" },
+      { title: "Terms & Conditions — MUNO" },
       {
         name: "description",
         content:
-          "The terms that govern use of Relaystack, the Discord content scheduling and approval platform.",
+          "The terms that govern use of MUNO, the Discord content scheduling and approval platform.",
       },
-      { property: "og:title", content: "Terms & Conditions — Relaystack" },
+      { property: "og:title", content: "Terms & Conditions — MUNO" },
       {
         property: "og:description",
-        content: "Accounts, acceptable use, content ownership and liability for Relaystack.",
+        content: "Accounts, acceptable use, content ownership and liability for MUNO.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
