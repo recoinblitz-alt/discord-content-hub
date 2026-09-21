@@ -9,6 +9,8 @@ import {
   RefreshCw,
   Send,
   ShieldCheck,
+  Download,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -342,5 +344,128 @@ function Settings() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function MembersExport() {
+  const { currentOrg, currentUser, orgServers, orgMembers } = useWorkspace();
+  const runExport = useServerFn(exportGuildMembers);
+  const [serverId, setServerId] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  if (currentUser.role !== "super_admin") return null;
+
+  const selected = serverId || orgServers[0]?.id || "";
+
+  const exportDiscord = async () => {
+    if (!selected) {
+      toast.error("Connect a server first");
+      return;
+    }
+    setBusy(true);
+    const pending = toast.loading("Reading members from Discord…");
+    try {
+      const result = await runExport({ data: { serverId: selected } });
+      if (!result.ok) {
+        toast.error(result.message, { id: pending, duration: 10000 });
+        return;
+      }
+      const base = slug(result.serverName);
+      downloadCsv(
+        `${base}-members.csv`,
+        toCsv(
+          [
+            "discord_user_id",
+            "username",
+            "global_name",
+            "display_name",
+            "is_bot",
+            "joined_at",
+            "role_ids",
+            "role_names",
+          ],
+          result.members.map((m) => [
+            m.userId,
+            m.username,
+            m.globalName,
+            m.displayName,
+            m.isBot ? "yes" : "no",
+            m.joinedAt,
+            m.roleIds.join(" | "),
+            m.roleNames.join(" | "),
+          ]),
+        ),
+      );
+      downloadCsv(
+        `${base}-roles.csv`,
+        toCsv(
+          ["role_id", "role_name", "colour", "position", "member_count"],
+          result.roles.map((r) => [r.id, r.name, r.color, r.position, r.memberCount]),
+        ),
+      );
+      toast.success(`${result.members.length} members exported`, { id: pending });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Export failed", { id: pending });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const exportWorkspace = () => {
+    downloadCsv(
+      `${slug(currentOrg.name)}-workspace-members.csv`,
+      toCsv(
+        ["name", "handle", "email", "role", "joined"],
+        orgMembers.map((m) => [m.name, m.handle, m.email ?? "", m.role, fullDate(new Date().toISOString())]),
+      ),
+    );
+    toast.success("Workspace member list downloaded");
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-surface">
+      <div className="flex items-center gap-2 border-b border-border px-4 py-3 text-sm font-semibold">
+        <Users className="h-4 w-4 text-blurple" /> Members export
+        <span className="ml-auto rounded-full bg-blurple/15 px-2 py-0.5 text-[0.625rem] font-medium uppercase text-blurple">
+          Owner only
+        </span>
+      </div>
+      <div className="space-y-3 p-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="export-server">Discord server</Label>
+          <select
+            id="export-server"
+            value={selected}
+            onChange={(e) => setServerId(e.target.value)}
+            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            disabled={orgServers.length === 0}
+          >
+            {orgServers.length === 0 && <option value="">No servers connected</option>}
+            {orgServers.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <Button
+          className="w-full"
+          onClick={() => void exportDiscord()}
+          disabled={busy || orgServers.length === 0}
+        >
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          Export members
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Downloads two spreadsheets: every member with their user ID, username, display name, join
+          date and roles (names and IDs), plus the server&rsquo;s full role list with member counts.
+          Discord only reveals the member list if &ldquo;Server Members Intent&rdquo; is switched on
+          for this bot in the Discord Developer Portal.
+        </p>
+        <Button variant="outline" className="w-full" onClick={exportWorkspace}>
+          <Download className="h-4 w-4" /> Export this workspace&rsquo;s team
+        </Button>
+      </div>
+    </div>
   );
 }
