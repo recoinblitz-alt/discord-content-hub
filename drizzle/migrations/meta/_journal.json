@@ -29,6 +29,13 @@
       "when": 1789970787314,
       "tag": "0003_org_events_and_delivery_claim",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789971516275,
+      "tag": "0004_media_storage_policies",
+      "breakpoints": true
     }
   ]
 }
