@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
+import { publicMediaUrl } from "@/lib/public-url";
 import { publishPost } from "@/lib/discord.functions";
 import {
   mapAudit,
@@ -450,7 +451,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         return {
           storagePath,
-          url: `${window.location.origin}/api/public/media/${storagePath}`,
+          url: publicMediaUrl(storagePath),
         };
       },
       removeMedia: async (id) => {
