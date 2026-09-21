@@ -8,7 +8,7 @@ import { AppFrame } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useWorkspace } from "@/lib/store";
+import { StoreProvider, useWorkspace } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -21,6 +21,14 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
+  return (
+    <StoreProvider>
+      <WorkspaceLayout />
+    </StoreProvider>
+  );
+}
+
+function WorkspaceLayout() {
   const { ready, loading, organizations } = useWorkspace();
 
   if (!ready || (loading && organizations.length === 0)) {
