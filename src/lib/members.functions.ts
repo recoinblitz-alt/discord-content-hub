@@ -1,10 +1,12 @@
 import { createServerFn } from "@tanstack/react-start";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import type { Role } from "@/lib/types";
 
 async function membershipRole(
-  supabase: Parameters<NonNullable<Parameters<typeof createServerFn>[0]>>[0] extends never ? never : any,
+  supabase: SupabaseClient<Database>,
   orgId: string,
   userId: string,
 ) {

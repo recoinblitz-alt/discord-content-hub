@@ -7,7 +7,7 @@ const MANAGER_ROLES = ["super_admin", "admin"];
 
 export const createInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { orgId: string; email: string; role: Role }) => input)
+  .inputValidator((input: { orgId: string; email: string; role: Role; origin: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: membership } = await context.supabase
       .from("org_members")
@@ -34,7 +34,8 @@ export const createInvite = createServerFn({ method: "POST" })
       .single();
     if (error) return { ok: false as const, message: error.message };
 
-    const inviteUrl = `${data.origin}/invite/${row.token}?invited=1`;
+    const origin = new URL(data.origin).origin;
+    const inviteUrl = `${origin}/invite/${row.token}?invited=1`;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: inviteUrl,
