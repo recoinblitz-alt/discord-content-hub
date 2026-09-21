@@ -27,7 +27,7 @@ export const Route = createFileRoute("/approvals")({
       },
     ],
   }),
-  component: Approvals;
+  component: Approvals,
 });
 
 function Approvals() {
