@@ -294,17 +294,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       createWorkspace: async (name, kind) => {
         if (!user) throw new Error("Not signed in");
-        const { data: org, error } = await supabase
+        const orgId = crypto.randomUUID();
+        const { error } = await supabase
           .from("organizations")
-          .insert({ name, kind, created_by: user.id, plan: "Free" })
-          .select("id")
-          .single();
+          .insert({ id: orgId, name, kind, created_by: user.id, plan: "Free" });
         if (error) throw error;
         const { error: memberError } = await supabase
           .from("org_members")
-          .insert({ org_id: org.id, user_id: user.id, role: "super_admin" });
+          .insert({ org_id: orgId, user_id: user.id, role: "super_admin" });
         if (memberError) throw memberError;
-        setOrgId(org.id);
+        setOrgId(orgId);
         await refresh();
       },
       setMemberRole: async (userId, nextRole) => {

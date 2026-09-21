@@ -36,11 +36,22 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const goAfterAuth = () => {
+    const pending = localStorage.getItem("relaystack-pending-invite");
+    if (pending) {
+      navigate({ to: "/invite/$token", params: { token: pending }, replace: true });
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) goAfterAuth();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -57,14 +68,14 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.session) {
-          navigate({ to: "/dashboard", replace: true });
+          goAfterAuth();
         } else {
           setSent(true);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard", replace: true });
+        goAfterAuth();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not sign in");

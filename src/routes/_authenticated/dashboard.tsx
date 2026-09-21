@@ -157,16 +157,22 @@ function Dashboard() {
           <div className="border-b border-border px-5 py-3.5">
             <h2 className="text-sm font-semibold">Recent activity</h2>
           </div>
+          {activity.length === 0 && (
+            <p className="px-5 py-10 text-center text-sm text-muted-foreground">
+              Nothing has happened yet. Create your first post to start the trail.
+            </p>
+          )}
           <ol className="divide-y divide-border">
             {activity.map((a) => {
               const post = orgPosts.find((p) => p.id === a.postId);
+              const avatar = memberOf(a.actorId)?.avatar;
               return (
                 <li key={a.id} className="flex gap-3 px-5 py-3">
-                  <img
-                    src={memberOf(a.actorId)?.avatar}
-                    alt=""
-                    className="mt-0.5 h-7 w-7 rounded-full bg-muted"
-                  />
+                  {avatar ? (
+                    <img src={avatar} alt="" className="mt-0.5 h-7 w-7 rounded-full bg-muted" />
+                  ) : (
+                    <span className="mt-0.5 h-7 w-7 rounded-full bg-muted" />
+                  )}
                   <div className="min-w-0 flex-1 text-sm">
                     <span className="font-medium">{memberOf(a.actorId)?.name}</span>{" "}
                     <span className="text-muted-foreground">

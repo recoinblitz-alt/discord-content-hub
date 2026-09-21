@@ -1,7 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { Button } from "@/components/ui/button";
+import { createInvite } from "@/lib/invites.functions";
 import { useWorkspace } from "@/lib/store";
 import { ROLE_LABELS, permissionsFor, type Role } from "@/lib/types";
 
@@ -112,6 +116,9 @@ function Team() {
           </table>
         </div>
 
+        <div className="space-y-6">
+        {permissions.manageTeam && <InvitePanel orgId={currentOrg.id} />}
+
         <div className="overflow-hidden rounded-xl border border-border bg-surface">
           <div className="border-b border-border px-4 py-3 text-sm font-semibold">
             Permission matrix
@@ -145,7 +152,81 @@ function Team() {
             </tbody>
           </table>
         </div>
+        </div>
       </div>
     </AppShell>
+  );
+}
+
+function InvitePanel({ orgId }: { orgId: string }) {
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState<Role>("user");
+  const [busy, setBusy] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+
+  const send = async () => {
+    setBusy(true);
+    try {
+      const result = await createInvite({ data: { orgId, email, role } });
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      setLink(`${window.location.origin}/invite/${result.token}`);
+      setEmail("");
+      toast.success(`Invite ready for ${result.email}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the invite");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-surface p-5">
+      <h2 className="text-sm font-semibold">Invite a teammate</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Share the link you get back. They join with the role you pick as soon as they sign in with
+        that email.
+      </p>
+      <div className="mt-4 flex flex-col gap-2">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="teammate@example.com"
+          className="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+        />
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as Role)}
+          className="rounded-lg border border-input bg-background px-2 py-2 text-sm"
+        >
+          {(["admin", "approver", "user"] as Role[]).map((r) => (
+            <option key={r} value={r}>
+              {ROLE_LABELS[r]}
+            </option>
+          ))}
+        </select>
+        <Button onClick={() => void send()} disabled={busy || !email}>
+          {busy ? "Creating…" : "Create invite"}
+        </Button>
+      </div>
+      {link && (
+        <div className="mt-3 flex items-center gap-2 rounded-lg bg-surface-2 px-3 py-2">
+          <code className="flex-1 truncate text-xs">{link}</code>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              void navigator.clipboard.writeText(link);
+              toast.success("Link copied");
+            }}
+          >
+            Copy
+          </Button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -23,6 +23,7 @@ import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
 import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
+import { Route as InviteTokenRouteImport } from './routes/invite.$token'
 import { Route as ApiPublicPublishDueRouteImport } from './routes/api/public/publish-due'
 
 const IndexRoute = IndexRouteImport.update({
@@ -94,6 +95,11 @@ const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
   path: '/templates',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const InviteTokenRoute = InviteTokenRouteImport.update({
+  id: '/invite/$token',
+  path: '/invite/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPublishDueRoute = ApiPublicPublishDueRouteImport.update({
   id: '/api/public/publish-due',
   path: '/api/public/publish-due',
@@ -114,6 +120,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
 }
 export interface FileRoutesByTo {
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AuthenticatedSettingsRoute
   '/team': typeof AuthenticatedTeamRoute
   '/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
 }
 export interface FileRoutesById {
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/team': typeof AuthenticatedTeamRoute
   '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
+  '/invite/$token': typeof InviteTokenRoute
   '/api/public/publish-due': typeof ApiPublicPublishDueRoute
 }
 export interface FileRouteTypes {
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/templates'
+    | '/invite/$token'
     | '/api/public/publish-due'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team'
     | '/templates'
+    | '/invite/$token'
     | '/api/public/publish-due'
   id:
     | '__root__'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/team'
     | '/_authenticated/templates'
+    | '/invite/$token'
     | '/api/public/publish-due'
   fileRoutesById: FileRoutesById
 }
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  InviteTokenRoute: typeof InviteTokenRoute
   ApiPublicPublishDueRoute: typeof ApiPublicPublishDueRoute
 }
 
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/invite/$token': {
+      id: '/invite/$token'
+      path: '/invite/$token'
+      fullPath: '/invite/$token'
+      preLoaderRoute: typeof InviteTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/publish-due': {
       id: '/api/public/publish-due'
       path: '/api/public/publish-due'
@@ -354,6 +374,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  InviteTokenRoute: InviteTokenRoute,
   ApiPublicPublishDueRoute: ApiPublicPublishDueRoute,
 }
 export const routeTree = rootRouteImport
