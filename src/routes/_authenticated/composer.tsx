@@ -134,50 +134,75 @@ function Composer() {
   const setEmbed = <K extends keyof Post["embed"]>(key: K, value: Post["embed"][K]) =>
     setPost((p) => ({ ...p, embed: { ...p.embed, [key]: value } }));
 
-  const persist = (next?: Partial<Post>) => {
+  const [busy, setBusy] = useState(false);
+
+  const persist = async (next?: Partial<Post>) => {
     const merged = { ...post, ...next } as Post;
     setPost(merged);
     if (isNew) {
-      createPost(merged);
+      const id = await createPost(merged);
+      const saved = { ...merged, id };
+      setPost(saved);
       setIsNew(false);
-      navigate({ to: "/composer", search: { postId: merged.id } });
-    } else {
-      savePost(merged);
+      navigate({ to: "/composer", search: { postId: id } });
+      return saved;
     }
+    await savePost(merged);
     return merged;
   };
 
-  const saveDraft = () => {
-    persist();
-    toast.success("Draft saved");
-  };
-
-  const submit = () => {
-    const merged = persist({ status: "pending" });
-    transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
-    toast.success(
-      needsApproval
-        ? `Submitted to the approval queue for #${channel?.name}`
-        : "Submitted for review",
-    );
-  };
-
-  const schedule = () => {
-    if (!scheduleAt) {
-      toast.error("Pick a date and time first");
-      return;
+  const run = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await fn();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Something went wrong");
+    } finally {
+      setBusy(false);
     }
-    const iso = new Date(scheduleAt).toISOString();
-    const merged = persist({ status: "scheduled", scheduledAt: iso });
-    transition(merged.id, "scheduled", "scheduled", `Scheduled for ${fullDate(iso)} ${post.timezone}`);
-    toast.success("Post scheduled");
   };
 
-  const publish = () => {
-    const merged = persist({});
-    publishNow(merged.id);
-    toast.success("Published to Discord (simulated delivery)");
-  };
+  const saveDraft = () =>
+    run(async () => {
+      await persist();
+      toast.success("Draft saved");
+    });
+
+  const submit = () =>
+    run(async () => {
+      const merged = await persist({ status: "pending" });
+      await transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
+      toast.success(
+        needsApproval
+          ? `Submitted to the approval queue for #${channel?.name}`
+          : "Submitted for review",
+      );
+    });
+
+  const schedule = () =>
+    run(async () => {
+      if (!scheduleAt) {
+        toast.error("Pick a date and time first");
+        return;
+      }
+      const iso = new Date(scheduleAt).toISOString();
+      const merged = await persist({ status: "scheduled", scheduledAt: iso });
+      await transition(
+        merged.id,
+        "scheduled",
+        "scheduled",
+        `Scheduled for ${fullDate(iso)} ${post.timezone}`,
+      );
+      toast.success("Post scheduled — it will be sent automatically");
+    });
+
+  const publish = () =>
+    run(async () => {
+      const merged = await persist({});
+      const result = await publishNow(merged.id);
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
+    });
 
   const applyTemplate = (id: string) => {
     const t = state.templates.find((x) => x.id === id);
@@ -190,7 +215,7 @@ function Composer() {
       buttons: structuredClone(t.buttons),
       title: p.title === "Untitled post" ? `${t.name} — draft` : p.title,
     }));
-    bumpTemplate(id);
+    void bumpTemplate(id);
     toast.success(`Applied “${t.name}”`);
   };
 
