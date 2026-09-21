@@ -27,7 +27,7 @@ The Blueprint uses:
 - Build: `npm install && npm run build:render`
 - Migration: `npm run db:migrate`
 - Start: `npm run start`
-- Health check: `/`
+- Health check: `/api/public/health` (returns `{"ok":true,...}`)
 - Scheduled publishing: `POST /api/public/publish-due` every minute
 
 Render's Blueprint uses Node.js and npm, so no Bun runtime is required in production.
