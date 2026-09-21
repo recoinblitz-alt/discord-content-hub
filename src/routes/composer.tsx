@@ -31,11 +31,18 @@ import {
   type Post,
 } from "@/lib/types";
 
+interface ComposerSearch {
+  postId?: string;
+  templateId?: string;
+}
+
 export const Route = createFileRoute("/composer")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    postId: typeof search.postId === "string" ? search.postId : undefined,
-    templateId: typeof search.templateId === "string" ? search.templateId : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): ComposerSearch => {
+    const out: ComposerSearch = {};
+    if (typeof search["postId"] === "string") out.postId = search["postId"];
+    if (typeof search["templateId"] === "string") out.templateId = search["templateId"];
+    return out;
+  },
   head: () => ({
     meta: [
       { title: "Post Creator — Relaystack" },

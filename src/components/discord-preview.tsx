@@ -6,14 +6,14 @@ import type { DiscordEmbed, EmbedButton } from "@/lib/types";
 interface PreviewProps {
   botName: string;
   botAvatar: string;
-  channelName?: string;
+  channelName?: string | undefined;
   kind: "message" | "embed";
   content: string;
   embed: DiscordEmbed;
-  buttons?: EmbedButton[];
-  attachments?: string[];
-  timestamp?: string | null;
-  className?: string;
+  buttons?: EmbedButton[] | undefined;
+  attachments?: string[] | undefined;
+  timestamp?: string | null | undefined;
+  className?: string | undefined;
 }
 
 function Md({ text, className }: { text: string; className?: string }) {
