@@ -1,5 +1,5 @@
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
-const DEFAULT_FROM = "MUNO <onboarding@resend.dev>";
+const DEFAULT_FROM = "MUNO <abhishek@solvextra.com>";
 
 function escapeHtml(value: string): string {
   return value
