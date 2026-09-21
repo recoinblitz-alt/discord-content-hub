@@ -16,7 +16,7 @@ interface PreviewProps {
   className?: string | undefined;
 }
 
-function Md({ text, className }: { text: string; className?: string }) {
+function Md({ text, className }: { text: string; className?: string | undefined }) {
   return (
     <span
       className={`dc-md ${className ?? ""}`}
