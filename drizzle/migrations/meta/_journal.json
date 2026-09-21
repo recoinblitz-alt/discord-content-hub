@@ -113,6 +113,13 @@
       "when": 1790006622566,
       "tag": "0015_lock_submitted_post_content",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790007392556,
+      "tag": "0016_restrict_member_and_profile_visibility",
+      "breakpoints": true
     }
   ]
 }

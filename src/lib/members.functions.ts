@@ -19,6 +19,24 @@ async function membershipRole(
   return data?.role as Role | undefined;
 }
 
+export const getOrgMemberRoster = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orgId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const callerRole = await membershipRole(context.supabase, data.orgId, context.userId);
+    if (callerRole !== "super_admin" && callerRole !== "admin") {
+      throw new Error("Owner or admin access required");
+    }
+
+    const { data: members, error } = await context.supabase
+      .from("org_members")
+      .select("user_id, role, profile:profiles(email, display_name, avatar_url)")
+      .eq("org_id", data.orgId)
+      .order("created_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return members ?? [];
+  });
+
 export const changeMemberRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { orgId: string; userId: string; role: Role }) => input)

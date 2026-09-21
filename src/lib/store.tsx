@@ -14,7 +14,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { publicMediaUrl } from "@/lib/public-url";
-import { changeMemberRole, removeOrgMember } from "@/lib/members.functions";
+import { changeMemberRole, getOrgMemberRoster, removeOrgMember } from "@/lib/members.functions";
 import { publishPost } from "@/lib/discord.functions";
 import {
   mapAudit,
@@ -189,6 +189,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from("org_members")
         .select("org_id, role, organizations(id, name, kind, plan)")
+        .eq("user_id", user!.id)
         .order("created_at", { ascending: true });
       if (error) throw error;
       const seen = new Set<string>();
@@ -204,6 +205,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   });
 
   const memberships = membershipQuery.data ?? [];
+  const activeMembership = memberships.find((membership) => membership.org.id === orgId) ?? null;
 
   useEffect(() => {
     if (!memberships.length) return;
@@ -215,17 +217,29 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [memberships, orgId]);
 
   const dataQuery = useQuery({
-    queryKey: ["org-data", orgId],
-    enabled: Boolean(orgId),
+    queryKey: ["org-data", orgId, activeMembership?.role],
+    enabled: Boolean(orgId && activeMembership),
     staleTime: 30_000,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<OrgData> => {
       const id = orgId!;
+      const memberRequest =
+        activeMembership?.role === "super_admin" || activeMembership?.role === "admin"
+          ? getOrgMemberRoster({ data: { orgId: id } })
+          : supabase.rpc("get_org_directory", { _org: id }).then(({ data: directory, error }) => {
+              if (error) throw error;
+              return (directory ?? []).map((entry) => ({
+                user_id: entry.user_id,
+                role: entry.user_id === user?.id ? activeMembership?.role ?? "user" : "user",
+                profile: {
+                  email: null,
+                  display_name: entry.display_name,
+                  avatar_url: entry.avatar_url,
+                },
+              }));
+            });
       const [members, servers, channels, posts, audit, templates, media] = await Promise.all([
-        supabase
-          .from("org_members")
-          .select("user_id, role, profile:profiles(email, display_name, avatar_url)")
-          .eq("org_id", id),
+        memberRequest,
         supabase.from("servers").select("*").eq("org_id", id).order("created_at"),
         supabase.from("channels").select("*").eq("org_id", id).order("name"),
         supabase.from("posts").select("*").eq("org_id", id).order("updated_at", { ascending: false }),
@@ -233,12 +247,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         supabase.from("templates").select("*").eq("org_id", id).order("created_at"),
         supabase.from("media_assets").select("*").eq("org_id", id).order("created_at", { ascending: false }),
       ]);
-      const first = [members, servers, channels, posts, audit, templates, media].find(
+      const first = [servers, channels, posts, audit, templates, media].find(
         (r) => r.error,
       );
       if (first?.error) throw first.error;
       return {
-        members: (members.data ?? []).map((row) => mapMember(row as never, [id])),
+        members: (Array.isArray(members) ? members : []).map((row) => mapMember(row as never, [id])),
         servers: (servers.data ?? []).map((row) => mapServer(row as never)),
         channels: (channels.data ?? []).map((row) => mapChannel(row as never)),
         posts: (posts.data ?? []).map((row) => mapPost(row as never)),
