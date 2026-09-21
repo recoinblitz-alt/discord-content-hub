@@ -65,12 +65,25 @@ function Approvals() {
       toast.error("Add a comment so the creator knows what to change");
       return;
     }
-    void transition(selected.id, status, action, note.trim() || undefined)
+    // Approving a post that already carries a requested time schedules it straight away,
+    // so nobody has to reopen the editor just to press "Schedule post".
+    const autoSchedule = status === "approved" && Boolean(selected.scheduledAt);
+    const nextStatus = autoSchedule ? "scheduled" : status;
+    const decisionNote =
+      autoSchedule && !note.trim()
+        ? `Approved and scheduled for ${fullDate(selected.scheduledAt)} ${selected.timezone}`
+        : note.trim() || undefined;
+
+    void transition(selected.id, nextStatus, action, decisionNote)
       .then(() => {
         setNote("");
         toast.success(
           status === "approved"
-            ? "Approved — ready to schedule"
+            ? autoSchedule
+              ? new Date(selected.scheduledAt ?? 0).getTime() <= Date.now()
+                ? "Approved — delivering to Discord now"
+                : `Approved and scheduled for ${fullDate(selected.scheduledAt)}`
+              : "Approved — add a date and time to schedule it"
             : status === "rejected"
               ? "Rejected with feedback"
               : "Changes requested",
@@ -80,6 +93,7 @@ function Approvals() {
       })
       .catch((error) => toast.error(error instanceof Error ? error.message : "Review failed"));
   };
+
 
   return (
     <AppShell title="Approval queue" subtitle={`${queue.length} submissions awaiting review`}>
