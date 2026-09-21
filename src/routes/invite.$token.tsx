@@ -179,12 +179,15 @@ function AcceptInvite() {
         ) : state === "setup" ? (
           <div className="mt-4 space-y-3 text-left">
             <p className="text-sm text-muted-foreground">
-              Your email is verified. Add your name and choose a password to join the workspace.
+              Your email is verified. Confirm your name to join the workspace.
             </p>
             <div className="space-y-1.5"><Label htmlFor="invite-name">Your name</Label><Input id="invite-name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="Alex Rivera" /></div>
             {email && <div className="space-y-1.5"><Label>Email</Label><Input value={email} disabled /></div>}
             <div className="space-y-1.5">
-              <Label htmlFor="invite-password">New password</Label>
+              <Label htmlFor="invite-password">Password (optional)</Label>
+              <p className="text-xs text-muted-foreground">
+                Already have a password? Leave this empty and keep using it.
+              </p>
               <Input
                 id="invite-password"
                 type="password"
