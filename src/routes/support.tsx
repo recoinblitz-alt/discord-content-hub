@@ -20,7 +20,7 @@ export const Route = createFileRoute("/support")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Support;
+  component: Support,
 });
 
 function Support() {
