@@ -90,6 +90,7 @@ function Composer() {
     transition,
     publishNow,
     bumpTemplate,
+    saveTemplate,
     permissions,
     state,
   } = useWorkspace();
