@@ -160,11 +160,7 @@ export function AppShell({
           <div className="space-y-2 border-t border-sidebar-border px-4 py-4">
             <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-2.5 py-2">
               {currentUser.avatar ? (
-                {currentUser.avatar ? (
-                  <img src={currentUser.avatar} alt="" className="h-7 w-7 rounded-full bg-muted" />
-                ) : (
-                  <span className="h-7 w-7 rounded-full bg-muted" />
-                )}
+                <img src={currentUser.avatar} alt="" className="h-7 w-7 rounded-full bg-muted" />
               ) : (
                 <div className="h-7 w-7 rounded-full bg-muted" />
               )}
