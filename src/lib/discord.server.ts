@@ -150,10 +150,22 @@ export function buildDiscordPayload(post: PostLike) {
     if (hasContent) payload["embeds"] = [embed];
   }
 
-  const attachments = Array.isArray(post.attachments) ? (post.attachments as string[]) : [];
+  // Attachments render as real images: fill the main embed's image slot when it's
+  // free, then add extra image-only embeds (Discord allows up to 10 per message).
+  const attachments = (Array.isArray(post.attachments) ? (post.attachments as string[]) : [])
+    .filter((url) => typeof url === "string" && /^https?:\/\//i.test(url));
   if (attachments.length) {
-    const extra = attachments.filter(Boolean).join("\n");
-    payload["content"] = [payload["content"], extra].filter(Boolean).join("\n");
+    const embeds = (payload["embeds"] as Record<string, unknown>[] | undefined) ?? [];
+    const queue = [...attachments];
+    const first = embeds[0];
+    if (first && !first["image"] && queue[0]) {
+      first["image"] = { url: queue.shift() };
+    }
+    for (const url of queue) {
+      if (embeds.length >= 10) break;
+      embeds.push({ image: { url } });
+    }
+    if (embeds.length) payload["embeds"] = embeds;
   }
 
   const buttons = Array.isArray(post.buttons) ? (post.buttons as Record<string, string>[]) : [];
