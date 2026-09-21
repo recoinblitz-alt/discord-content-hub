@@ -68,14 +68,14 @@ function AuthPage() {
         });
         if (error) throw error;
         if (data.session) {
-          navigate({ to: "/dashboard", replace: true });
+          goAfterAuth();
         } else {
           setSent(true);
         }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        navigate({ to: "/dashboard", replace: true });
+        goAfterAuth();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not sign in");
