@@ -281,7 +281,12 @@ function Composer() {
             </Button>
           )}
           {(post.status === "draft" || post.status === "changes_requested" || post.status === "rejected") && (
-            <Button size="sm" onClick={submit} disabled={!canEdit}>
+            <Button
+              size="sm"
+              onClick={submit}
+              disabled={!canEdit || !scheduleAt}
+              title={!scheduleAt ? "Pick a date and time first" : undefined}
+            >
               <Send className="h-4 w-4" />
               {post.status === "draft" ? "Submit for approval" : "Resubmit"}
             </Button>
