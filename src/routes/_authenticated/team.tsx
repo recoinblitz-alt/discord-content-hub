@@ -112,6 +112,9 @@ function Team() {
           </table>
         </div>
 
+        <div className="space-y-6">
+        {permissions.manageTeam && <InvitePanel orgId={currentOrg.id} />}
+
         <div className="overflow-hidden rounded-xl border border-border bg-surface">
           <div className="border-b border-border px-4 py-3 text-sm font-semibold">
             Permission matrix
