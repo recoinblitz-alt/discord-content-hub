@@ -6,23 +6,25 @@ import {
   History,
   Image as ImageIcon,
   LayoutDashboard,
+  LogOut,
   Moon,
   PenSquare,
-  RotateCcw,
+  Plus,
   Server,
   Sun,
   Users,
   Zap,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { useTheme } from "@/lib/use-theme";
-import { ROLE_LABELS, type Role } from "@/lib/types";
+import { ROLE_LABELS } from "@/lib/types";
 
 const nav = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/composer", label: "Post Creator", icon: PenSquare },
   { to: "/posts", label: "Posts", icon: FileText },
   { to: "/approvals", label: "Approval Queue", icon: CheckCheck },
@@ -46,20 +48,19 @@ export function AppShell({
   children: ReactNode;
 }) {
   const {
-    state,
+    organizations,
     currentOrg,
     currentUser,
-    orgMembers,
     orgPosts,
     orgChannels,
     setOrg,
-    setUser,
-    setRole,
-    resetDemo,
+    createWorkspace,
+    signOut,
     permissions,
-  } = useStore();
+  } = useWorkspace();
   const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [creating, setCreating] = useState(false);
 
   const approvalChannels = new Set(
     orgChannels.filter((c) => c.requiresApproval).map((c) => c.id),
@@ -67,6 +68,20 @@ export function AppShell({
   const pendingCount = orgPosts.filter(
     (p) => p.status === "pending" && approvalChannels.has(p.channelId),
   ).length;
+
+  const newWorkspace = async () => {
+    const name = window.prompt("Name the new workspace");
+    if (!name?.trim()) return;
+    setCreating(true);
+    try {
+      await createWorkspace(name.trim(), "Workspace");
+      toast.success("Workspace created");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the workspace");
+    } finally {
+      setCreating(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -84,19 +99,30 @@ export function AppShell({
 
           <div className="px-4 pb-3">
             <label className="mb-1.5 block text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              Organization
+              Workspace
             </label>
-            <select
-              value={currentOrg.id}
-              onChange={(e) => setOrg(e.target.value)}
-              className="w-full rounded-lg border border-sidebar-border bg-surface-2 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            >
-              {state.organizations.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.name}
-                </option>
-              ))}
-            </select>
+            <div className="flex gap-1.5">
+              <select
+                value={currentOrg.id}
+                onChange={(e) => setOrg(e.target.value)}
+                className="min-w-0 flex-1 rounded-lg border border-sidebar-border bg-surface-2 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              >
+                {organizations.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.name}
+                  </option>
+                ))}
+              </select>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => void newWorkspace()}
+                disabled={creating}
+                title="New workspace"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
             <p className="mt-1.5 text-[0.6875rem] text-muted-foreground">
               {currentOrg.tag} · {currentOrg.plan} plan
             </p>
@@ -104,8 +130,7 @@ export function AppShell({
 
           <nav className="flex-1 space-y-0.5 overflow-y-auto px-3 py-2">
             {nav.map((item) => {
-              const active =
-                item.to === "/" ? pathname === "/" : pathname.startsWith(item.to);
+              const active = pathname.startsWith(item.to);
               const hidden =
                 (item.to === "/settings" && !permissions.configureServers) ||
                 (item.to === "/approvals" && !permissions.approve);
@@ -133,38 +158,26 @@ export function AppShell({
           </nav>
 
           <div className="space-y-2 border-t border-sidebar-border px-4 py-4">
-            <label className="block text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
-              Simulate member
-            </label>
-            <select
-              value={currentUser.id}
-              onChange={(e) => setUser(e.target.value)}
-              className="w-full rounded-lg border border-sidebar-border bg-surface-2 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            >
-              {orgMembers.map((m) => (
-                <option key={m.id} value={m.id}>
-                  {m.name} · {ROLE_LABELS[m.role]}
-                </option>
-              ))}
-            </select>
-            <select
-              value={currentUser.role}
-              onChange={(e) => setRole(currentUser.id, e.target.value as Role)}
-              className="w-full rounded-lg border border-sidebar-border bg-surface-2 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-            >
-              {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                <option key={r} value={r}>
-                  Act as {ROLE_LABELS[r]}
-                </option>
-              ))}
-            </select>
-            <div className="flex gap-2 pt-1">
+            <div className="flex items-center gap-2 rounded-lg bg-surface-2 px-2.5 py-2">
+              {currentUser.avatar ? (
+                <img src={currentUser.avatar} alt="" className="h-7 w-7 rounded-full bg-muted" />
+              ) : (
+                <div className="h-7 w-7 rounded-full bg-muted" />
+              )}
+              <div className="min-w-0 flex-1 leading-tight">
+                <div className="truncate text-xs font-medium">{currentUser.name}</div>
+                <div className="text-[0.6875rem] text-muted-foreground">
+                  {ROLE_LABELS[currentUser.role]}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
               <Button variant="outline" size="sm" className="flex-1" onClick={toggle}>
                 {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
                 {theme === "dark" ? "Light" : "Discord"}
               </Button>
-              <Button variant="ghost" size="sm" onClick={resetDemo} title="Reset demo data">
-                <RotateCcw className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={() => void signOut()} title="Sign out">
+                <LogOut className="h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -180,14 +193,16 @@ export function AppShell({
                 )}
               </div>
               <div className="flex items-center gap-2">{actions}</div>
-              <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1.5">
-                <img src={currentUser.avatar} alt="" className="h-7 w-7 rounded-full bg-muted" />
-                <div className="hidden leading-tight sm:block">
-                  <div className="text-xs font-medium">{currentUser.name}</div>
-                  <div className="text-[0.6875rem] text-muted-foreground">
-                    {ROLE_LABELS[currentUser.role]}
-                  </div>
-                </div>
+              <div className="flex items-center gap-2 rounded-full border border-border bg-surface px-2.5 py-1.5 lg:hidden">
+                <div className="text-xs font-medium">{currentUser.name}</div>
+                <button
+                  type="button"
+                  onClick={() => void signOut()}
+                  className="text-muted-foreground"
+                  title="Sign out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
               </div>
             </div>
             <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2 lg:hidden">
