@@ -315,6 +315,7 @@ export type Database = {
           embed: Json
           failure_reason: string | null
           id: string
+          media_mode: string
           org_id: string
           published_at: string | null
           revision: number
@@ -338,6 +339,7 @@ export type Database = {
           embed?: Json
           failure_reason?: string | null
           id?: string
+          media_mode?: string
           org_id: string
           published_at?: string | null
           revision?: number
@@ -361,6 +363,7 @@ export type Database = {
           embed?: Json
           failure_reason?: string | null
           id?: string
+          media_mode?: string
           org_id?: string
           published_at?: string | null
           revision?: number
