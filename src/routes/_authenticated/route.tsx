@@ -53,7 +53,7 @@ function WorkspaceLayout() {
       </div>
     );
   }
-  if (organizations.length === 0) return <CreateWorkspace />;
+  if (organizations.length === 0) return <NoWorkspace />;
 
   return (
     <AppFrame>
@@ -62,8 +62,89 @@ function WorkspaceLayout() {
   );
 }
 
-function CreateWorkspace() {
-  const { createWorkspace, signOut } = useWorkspace();
+function NoWorkspace() {
+  const { currentUser, signOut } = useWorkspace();
+  const [showCreate, setShowCreate] = useState(false);
+
+  if (showCreate) return <CreateWorkspace onBack={() => setShowCreate(false)} />;
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
+      <div className="w-full max-w-sm space-y-5 rounded-xl border border-border bg-surface p-6">
+        <div className="flex items-center gap-2.5">
+          <BrandLogo className="h-11 w-11" />
+          <div className="leading-tight">
+            <div className="font-display text-base font-semibold">Welcome to MUNO</div>
+            <div className="text-xs text-muted-foreground">
+              {currentUser?.email ? `Signed in as ${currentUser.email}` : "You're signed in"}
+            </div>
+          </div>
+        </div>
+
+        <p className="text-sm text-muted-foreground">
+          You're not part of a workspace yet. Join one with an invite, or start your own.
+        </p>
+
+        <JoinWithInvite />
+
+        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <Button variant="outline" className="w-full" onClick={() => setShowCreate(true)}>
+          Create a new workspace
+        </Button>
+
+        <button
+          type="button"
+          onClick={() => void signOut()}
+          className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+        >
+          Sign out or use another account
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function JoinWithInvite() {
+  const navigate = useNavigate();
+  const [value, setValue] = useState("");
+
+  const join = (event: React.FormEvent) => {
+    event.preventDefault();
+    const raw = value.trim();
+    if (!raw) return;
+    const token = raw.split("?")[0]?.split("/").filter(Boolean).pop() ?? "";
+    if (!token) {
+      toast.error("Paste the invite link or code you were sent");
+      return;
+    }
+    navigate({ to: "/invite/$token", params: { token } });
+  };
+
+  return (
+    <form onSubmit={join} className="space-y-2">
+      <Label htmlFor="invite-code">Have an invite link or code?</Label>
+      <div className="flex gap-2">
+        <Input
+          id="invite-code"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder="Paste invite link or code"
+        />
+        <Button type="submit" disabled={!value.trim()}>
+          Join
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+function CreateWorkspace({ onBack }: { onBack: () => void }) {
+  const { createWorkspace } = useWorkspace();
   const [name, setName] = useState("");
   const [kind, setKind] = useState("Gaming / Esports");
   const [busy, setBusy] = useState(false);
@@ -123,12 +204,13 @@ function CreateWorkspace() {
         </Button>
         <button
           type="button"
-          onClick={() => void signOut()}
+          onClick={onBack}
           className="w-full text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
         >
-          Sign out
+          Back
         </button>
       </form>
     </div>
   );
 }
+
