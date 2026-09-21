@@ -479,14 +479,14 @@ function CalendarPage() {
                 <div className="flex flex-wrap gap-1.5">
                   {DISCORD_COLORS.map((c) => (
                     <button
-                      key={c.value}
+                      key={c.hex}
                       type="button"
-                      onClick={() => setDraft({ ...draft, color: c.value })}
+                      onClick={() => setDraft({ ...draft, color: c.hex })}
                       title={c.name}
                       className={`h-6 w-6 rounded-md border-2 transition ${
-                        draft.color === c.value ? "border-foreground" : "border-transparent"
+                        draft.color === c.hex ? "border-foreground" : "border-transparent"
                       }`}
-                      style={{ backgroundColor: c.value }}
+                      style={{ backgroundColor: c.hex }}
                     />
                   ))}
                 </div>
