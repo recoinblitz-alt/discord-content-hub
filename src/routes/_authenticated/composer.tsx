@@ -182,11 +182,18 @@ function Composer() {
 
   const submit = () =>
     run(async () => {
-      const merged = await persist({
-        status: "pending",
-        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
-      });
-      await transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
+      if (!scheduleAt) {
+        toast.error("Pick the date and time you want this posted before submitting");
+        return;
+      }
+      const iso = new Date(scheduleAt).toISOString();
+      const merged = await persist({ scheduledAt: iso });
+      await transition(
+        merged.id,
+        "pending",
+        history.length ? "resubmitted" : "submitted",
+        `Requested for ${fullDate(iso)} ${post.timezone}`,
+      );
       toast.success(
         needsApproval
           ? `Submitted to the approval queue for #${channel?.name}`
