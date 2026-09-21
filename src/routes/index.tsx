@@ -1,21 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { CalendarClock, CheckCheck, MessageSquare, Zap } from "lucide-react";
+import { CalendarClock, CheckCheck, MessageSquare } from "lucide-react";
 import { useEffect } from "react";
 
 import { LegalFooter } from "@/components/legal-page";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Relaystack — Discord scheduling, approvals and embeds" },
+      { title: "MUNO — Discord scheduling, approvals and embeds" },
       {
         name: "description",
         content:
           "Draft Discord announcements with a live embed preview, route them through approvals, schedule them, and let your bot publish automatically.",
       },
-      { property: "og:title", content: "Relaystack — Discord content operations" },
+      { property: "og:title", content: "MUNO — Discord content operations" },
       {
         property: "og:description",
         content:
@@ -57,10 +58,8 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="flex items-center justify-between px-6 py-5 md:px-10">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
-            <Zap className="h-5 w-5" />
-          </div>
-          <span className="font-display text-sm font-semibold">Relaystack</span>
+          <BrandLogo className="h-10 w-10" />
+          <span className="font-display text-sm font-semibold">MUNO</span>
         </div>
         <Button asChild size="sm">
           <Link to="/auth">Sign in</Link>

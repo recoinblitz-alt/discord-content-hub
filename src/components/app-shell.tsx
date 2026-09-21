@@ -19,6 +19,7 @@ import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
 import { LegalFooter } from "@/components/legal-page";
+import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/lib/store";
 import { useTheme } from "@/lib/use-theme";
@@ -79,11 +80,9 @@ export function AppFrame({ children }: { children: ReactNode }) {
       <div className="flex">
         <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
           <div className="flex items-center gap-2.5 px-5 py-5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
-              <Zap className="h-5 w-5" />
-            </div>
+            <BrandLogo className="h-10 w-10" />
             <div className="leading-tight">
-              <div className="font-display text-sm font-semibold">Relaystack</div>
+              <div className="font-display text-sm font-semibold">MUNO</div>
               <div className="text-xs text-muted-foreground">Discord content ops</div>
             </div>
           </div>
@@ -179,7 +178,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
           <div className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur lg:hidden">
             <div className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex items-center gap-2 font-display text-sm font-semibold">
-                <Zap className="h-4 w-4 text-blurple" /> Relaystack
+                <BrandLogo className="h-6 w-6" /> MUNO
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="ghost" size="sm" onClick={toggle} title="Change theme">

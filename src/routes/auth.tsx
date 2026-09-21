@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand-logo";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,12 +13,12 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Sign in — Relaystack" },
+      { title: "Sign in — MUNO" },
       {
         name: "description",
-        content: "Sign in to Relaystack to schedule, approve and publish Discord announcements.",
+        content: "Sign in to MUNO to schedule, approve and publish Discord announcements.",
       },
-      { property: "og:title", content: "Sign in — Relaystack" },
+      { property: "og:title", content: "Sign in — MUNO" },
       {
         property: "og:description",
         content: "Discord content scheduling and approvals for your team.",
@@ -100,11 +101,9 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
-            <Zap className="h-5 w-5" />
-          </div>
+          <BrandLogo className="h-11 w-11" />
           <div className="leading-tight">
-            <div className="font-display text-base font-semibold">Relaystack</div>
+            <div className="font-display text-base font-semibold">MUNO</div>
             <div className="text-xs text-muted-foreground">Discord content ops</div>
           </div>
         </div>

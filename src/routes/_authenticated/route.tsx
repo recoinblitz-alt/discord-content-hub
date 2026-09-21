@@ -1,9 +1,10 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { BrandLogo } from "@/components/brand-logo";
 import { AppFrame } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,9 +73,7 @@ function CreateWorkspace() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <form onSubmit={submit} className="w-full max-w-sm space-y-4 rounded-xl border border-border bg-surface p-6">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
-            <Zap className="h-5 w-5" />
-          </div>
+          <BrandLogo className="h-11 w-11" />
           <div className="leading-tight">
             <div className="font-display text-base font-semibold">Name your workspace</div>
             <div className="text-xs text-muted-foreground">You'll be its owner</div>
