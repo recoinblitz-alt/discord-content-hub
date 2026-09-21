@@ -19,3 +19,4 @@
 - [x] Reuse pending invitations instead of creating duplicate active links.
 - [ ] Configure the MUNO sender domain and branded authentication emails.
 - [ ] Verify a fresh Render invitation from email through workspace entry.
+- [ ] Fix independent Render scheduled delivery secret and verify scheduled posts publish.
