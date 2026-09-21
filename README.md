@@ -24,9 +24,9 @@ bun run dev
 
 The Blueprint uses:
 
-- Build: `bun install --frozen-lockfile && bun run build:render`
-- Migration: `bun run db:migrate`
-- Start: `bun run start`
+- Build: `npm install && npm run build:render`
+- Migration: `npm run db:migrate`
+- Start: `npm run start`
 - Health check: `/`
 - Scheduled publishing: `POST /api/public/publish-due` every minute
 
@@ -35,9 +35,9 @@ Render's Blueprint uses Node.js and npm, so no Bun runtime is required in produc
 ## Manual production commands
 
 ```sh
-bun run db:migrate
-bun run build:render
-bun run start
+npm run db:migrate
+npm run build:render
+npm run start
 ```
 
 The server respects Render's `PORT` automatically. Never expose the service-role key or scheduler secret with a `VITE_` prefix.
