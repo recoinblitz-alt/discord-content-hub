@@ -205,6 +205,89 @@ export async function sendDiscordMessage(
   return message.id;
 }
 
+export interface OutgoingFile {
+  filename: string;
+  blob: Blob;
+}
+
+/** Discord's per-file limit for servers without boosts. */
+export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Posts a message with real file uploads (multipart/form-data), so images appear
+ * as native Discord attachments instead of fetched links.
+ */
+export async function sendDiscordMessageWithFiles(
+  token: string,
+  channelDiscordId: string,
+  payload: Record<string, unknown>,
+  files: OutgoingFile[],
+) {
+  const form = new FormData();
+  form.append("payload_json", JSON.stringify(payload));
+  files.slice(0, 10).forEach((file, index) => {
+    form.append(`files[${index}]`, file.blob, file.filename);
+  });
+
+  const res = await fetch(`${API}/channels/${channelDiscordId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bot ${token}` },
+    body: form,
+  });
+  if (!res.ok) {
+    let detail = await res.text();
+    try {
+      const parsed = JSON.parse(detail) as { message?: string };
+      if (parsed.message) detail = parsed.message;
+    } catch {
+      /* keep raw text */
+    }
+    const error = new Error(detail || `Discord error ${res.status}`) as DiscordError;
+    error.status = res.status;
+    throw error;
+  }
+  const message = (await res.json()) as { id: string };
+  return message.id;
+}
+
+/**
+ * Turns saved attachment URLs into downloadable files from the private media bucket.
+ * URLs without a stored file (external links) or files above Discord's limit are
+ * returned as `leftovers` and fall back to the embed-image method.
+ */
+export async function resolveUploadFiles(orgId: string, urls: string[]) {
+  const files: OutgoingFile[] = [];
+  const leftovers: string[] = [];
+  if (!urls.length) return { files, leftovers };
+
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: assets } = await supabaseAdmin
+    .from("media_assets")
+    .select("url, name, storage_path")
+    .eq("org_id", orgId)
+    .in("url", urls);
+
+  for (const url of urls) {
+    const asset = assets?.find((a) => a.url === url);
+    if (!asset?.storage_path) {
+      leftovers.push(url);
+      continue;
+    }
+    const { data: blob, error } = await supabaseAdmin.storage
+      .from("media")
+      .download(asset.storage_path);
+    if (error || !blob || blob.size > MAX_UPLOAD_BYTES || files.length >= 10) {
+      leftovers.push(url);
+      continue;
+    }
+    const ext = asset.storage_path.split(".").pop() ?? "png";
+    const base = (asset.name || "image").replace(/[^a-z0-9._-]+/gi, "-").slice(0, 60);
+    const filename = base.toLowerCase().endsWith(`.${ext.toLowerCase()}`) ? base : `${base}.${ext}`;
+    files.push({ filename, blob });
+  }
+  return { files, leftovers };
+}
+
 export { BUTTON_STYLE };
 
 /**
