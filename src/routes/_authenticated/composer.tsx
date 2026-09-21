@@ -282,9 +282,9 @@ function Composer() {
         </>
       }
     >
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         {/* ── Editor ─────────────────────────────── */}
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-5">
           {feedback.length > 0 && post.status === "changes_requested" && (
             <div className="rounded-xl border border-info/40 bg-info/10 p-4">
               <h3 className="text-sm font-semibold text-info">Changes requested</h3>
@@ -355,12 +355,12 @@ function Composer() {
                     {k === "message" ? "Standard message" : "Rich embed"}
                   </button>
                 ))}
-                <div className="ml-auto flex items-center gap-2">
+                <div className="flex min-w-0 basis-full items-center gap-2 sm:ml-auto sm:basis-auto">
                   <Sparkles className="h-4 w-4 text-muted-foreground" />
                   <select
                     value=""
                     onChange={(e) => e.target.value && applyTemplate(e.target.value)}
-                    className="rounded-lg border border-input bg-background px-2 py-1.5 text-xs"
+                    className="min-w-0 flex-1 rounded-lg border border-input bg-background px-2 py-1.5 text-xs"
                   >
                     <option value="">Apply template…</option>
                     {orgTemplates.map((t) => (
@@ -613,9 +613,9 @@ function Composer() {
             <div className={headClass}>Link buttons</div>
             <div className="space-y-3 p-4">
               {post.buttons.map((b: EmbedButton) => (
-                <div key={b.id} className="flex flex-wrap items-center gap-2">
+                <div key={b.id} className="grid min-w-0 gap-2 sm:grid-cols-[10rem_minmax(0,1fr)_auto_auto]">
                   <Input
-                    className="w-40"
+                    className="w-full min-w-0"
                     value={b.label}
                     placeholder="Label"
                     onChange={(e) =>
@@ -628,7 +628,7 @@ function Composer() {
                     }
                   />
                   <Input
-                    className="min-w-48 flex-1"
+                    className="w-full min-w-0"
                     value={b.url}
                     placeholder="https://"
                     onChange={(e) =>
@@ -797,7 +797,7 @@ function Composer() {
         </div>
 
         {/* ── Preview + schedule ─────────────────── */}
-        <div className="space-y-5 xl:sticky xl:top-28 xl:self-start">
+        <div className="min-w-0 space-y-5 xl:sticky xl:top-28 xl:self-start">
           <div>
             <div className="mb-2 flex items-center justify-between">
               <h2 className="text-sm font-semibold">Live Discord preview</h2>

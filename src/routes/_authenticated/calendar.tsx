@@ -94,7 +94,9 @@ function CalendarPage() {
     saveEvent,
     removeEvent,
   } = useWorkspace();
-  const [view, setView] = useState<"month" | "week" | "list">("month");
+  const [view, setView] = useState<"month" | "week" | "list">(() =>
+    typeof window !== "undefined" && window.innerWidth < 640 ? "list" : "month",
+  );
   const [cursor, setCursor] = useState(() => new Date());
   const [serverId, setServerId] = useState("all");
   const [channelId, setChannelId] = useState("all");
@@ -253,7 +255,8 @@ function CalendarPage() {
         </div>
       }
     >
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-4 grid gap-3 sm:flex sm:flex-wrap sm:items-center">
+        <div className="flex min-w-0 items-center gap-2">
         <Button size="icon" variant="outline" onClick={() => shift(-1)}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
@@ -268,8 +271,9 @@ function CalendarPage() {
         <Button size="sm" variant="ghost" onClick={() => setCursor(new Date())}>
           Today
         </Button>
+        </div>
 
-        <div className="ml-auto flex items-center gap-1 rounded-lg border border-border p-0.5">
+        <div className="grid grid-cols-3 items-center gap-1 rounded-lg border border-border p-0.5 sm:ml-auto sm:flex">
           {(["all", "posts", "events"] as const).map((s) => (
             <button
               key={s}
@@ -283,13 +287,14 @@ function CalendarPage() {
           ))}
         </div>
 
+        <div className="grid gap-2 sm:contents">
         <select
           value={serverId}
           onChange={(e) => {
             setServerId(e.target.value);
             setChannelId("all");
           }}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          className="min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-sm"
         >
           <option value="all">All servers</option>
           {orgServers.map((s) => (
@@ -298,7 +303,7 @@ function CalendarPage() {
             </option>
           ))}
         </select>
-        <div className="w-48">
+        <div className="min-w-0 sm:w-48">
           <ChannelPicker
             channels={serverId === "all" ? orgChannels : channelsOfServer(serverId)}
             value={channelId}
@@ -311,7 +316,7 @@ function CalendarPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value as PostStatus | "all")}
-          className="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+          className="min-w-0 rounded-lg border border-input bg-background px-3 py-2 text-sm"
         >
           <option value="all">All statuses</option>
           {(Object.keys(STATUS_LABELS) as PostStatus[]).map((s) => (
@@ -320,10 +325,12 @@ function CalendarPage() {
             </option>
           ))}
         </select>
+        </div>
       </div>
 
       {view === "month" && (
-        <div className="overflow-hidden rounded-xl border border-border bg-surface">
+        <div className="overflow-x-auto rounded-xl border border-border bg-surface">
+          <div className="min-w-[700px]">
           <div className="grid grid-cols-7 border-b border-border bg-surface-2 text-xs font-semibold text-muted-foreground">
             {DAYS.map((d) => (
               <div key={d} className="px-2 py-2">
@@ -351,6 +358,7 @@ function CalendarPage() {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
       )}
@@ -425,7 +433,7 @@ function CalendarPage() {
       )}
 
       <Dialog open={Boolean(draft)} onOpenChange={(open) => !open && setDraft(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{draft?.id ? "Edit team event" : "Add team event"}</DialogTitle>
             <DialogDescription>
@@ -498,7 +506,8 @@ function CalendarPage() {
               <Button
                 variant="outline"
                 onClick={async () => {
-                  await deleteEvent(draft.id!);
+                  if (!draft.id) return;
+                  await deleteEvent(draft.id);
                   setDraft(null);
                 }}
               >

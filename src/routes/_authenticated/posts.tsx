@@ -64,7 +64,7 @@ function Posts() {
           placeholder="Search posts…"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="w-56"
+          className="w-full sm:w-56"
         />
         <select
           value={status}
@@ -109,7 +109,33 @@ function Posts() {
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-surface">
+      <div className="space-y-3 md:hidden">
+        {filtered.map((p) => (
+          <article key={p.id} className="rounded-xl border border-border bg-surface p-4">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+              <div className="min-w-0">
+                <Link to="/composer" search={{ postId: p.id }} className="block truncate font-medium hover:underline">{p.title}</Link>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{serverOf(p.serverId)?.name} · #{channelOf(p.channelId)?.name}</p>
+              </div>
+              <StatusBadge status={p.status} />
+            </div>
+            <dl className="mt-3 grid grid-cols-2 gap-3 text-xs">
+              <div><dt className="text-muted-foreground">Author</dt><dd className="mt-0.5 truncate">{memberOf(p.authorId)?.name}</dd></div>
+              <div><dt className="text-muted-foreground">Updated</dt><dd className="mt-0.5">{relative(p.updatedAt)}</dd></div>
+              {p.scheduledAt && <div className="col-span-2"><dt className="text-muted-foreground">Scheduled</dt><dd className="mt-0.5">{fullDate(p.scheduledAt)} · {p.timezone}</dd></div>}
+            </dl>
+            {p.deliveryNote && <p className={`mt-3 text-xs ${p.status === "failed" ? "text-destructive" : "text-muted-foreground"}`}>{p.deliveryNote}</p>}
+            <div className="mt-3 flex items-center justify-end gap-2 border-t border-border pt-3">
+              {p.status === "failed" && <Button size="sm" variant="outline" disabled={retrying === p.id} onClick={async () => { setRetrying(p.id); try { const result = await publishNow(p.id); result.ok ? toast.success(result.message) : toast.error(result.message); } catch (error) { toast.error(error instanceof Error ? error.message : "Retry failed"); } finally { setRetrying(""); } }}><RefreshCw className="h-3.5 w-3.5" /> Retry</Button>}
+              <Button asChild size="sm" variant="outline"><Link to="/composer" search={{ postId: p.id }}>Edit</Link></Button>
+              <Button size="icon" variant="ghost" onClick={() => { deletePost(p.id); toast.success("Post deleted"); }}><Trash2 className="h-4 w-4" /></Button>
+            </div>
+          </article>
+        ))}
+        {filtered.length === 0 && <div className="rounded-xl border border-border bg-surface px-4 py-10 text-center text-sm text-muted-foreground">No posts match these filters.</div>}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-xl border border-border bg-surface md:block">
         <table className="w-full text-sm">
           <thead className="bg-surface-2 text-left text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
