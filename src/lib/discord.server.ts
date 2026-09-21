@@ -108,6 +108,7 @@ interface PostLike {
   embed: Record<string, unknown> | null;
   buttons: unknown;
   attachments: unknown;
+  media_mode?: string | null;
 }
 
 export function buildDiscordPayload(post: PostLike) {
