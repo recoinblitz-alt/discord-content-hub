@@ -319,11 +319,22 @@ export async function deliverPost(postId: string) {
   if (!secret?.bot_token) return { ok: false, message: "This server has no bot token saved" };
 
   try {
-    const messageId = await sendDiscordMessage(
-      secret.bot_token,
-      channel.discord_id,
-      buildDiscordPayload(post as never),
-    );
+    const urls = Array.isArray(post.attachments) ? (post.attachments as string[]) : [];
+    const wantsUpload = (post as { media_mode?: string | null }).media_mode === "upload";
+    const { files, leftovers } = wantsUpload
+      ? await resolveUploadFiles(post.org_id, urls)
+      : { files: [] as OutgoingFile[], leftovers: urls };
+
+    // Anything that couldn't be uploaded still shows up as an embed image.
+    const payload = buildDiscordPayload({
+      ...(post as never),
+      attachments: leftovers,
+      media_mode: "embed",
+    } as never);
+
+    const messageId = files.length
+      ? await sendDiscordMessageWithFiles(secret.bot_token, channel.discord_id, payload, files)
+      : await sendDiscordMessage(secret.bot_token, channel.discord_id, payload);
     const now = new Date().toISOString();
     await supabaseAdmin
       .from("posts")
