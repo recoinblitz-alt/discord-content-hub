@@ -1,0 +1,12 @@
+import { statusStyles } from "@/lib/format";
+import { STATUS_LABELS, type PostStatus } from "@/lib/types";
+
+export function StatusBadge({ status, className }: { status: PostStatus; className?: string }) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${statusStyles[status]} ${className ?? ""}`}
+    >
+      {STATUS_LABELS[status]}
+    </span>
+  );
+}
