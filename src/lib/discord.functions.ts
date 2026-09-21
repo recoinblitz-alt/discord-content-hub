@@ -1,0 +1,240 @@
+import { createServerFn } from "@tanstack/react-start";
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+type Ctx = { supabase: any; userId: string };
+
+async function assertRole(context: Ctx, orgId: string, roles: string[]) {
+  const { data, error } = await context.supabase
+    .from("org_members")
+    .select("role")
+    .eq("org_id", orgId)
+    .eq("user_id", context.userId)
+    .maybeSingle();
+  if (error || !data) throw new Error("You are not a member of this workspace");
+  if (!roles.includes(data.role as string)) throw new Error("Your role cannot do that");
+  return data.role as string;
+}
+
+/** Verify a bot token and list the servers the bot has joined. */
+export const inspectBotToken = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orgId: string; botToken: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertRole(context as Ctx, data.orgId, ["super_admin", "admin"]);
+    const { fetchBotIdentity, fetchBotGuilds } = await import("./discord.server");
+    const token = data.botToken.trim().replace(/^Bot\s+/i, "");
+    try {
+      const bot = await fetchBotIdentity(token);
+      const guilds = await fetchBotGuilds(token);
+      return { ok: true as const, bot, guilds };
+    } catch (err) {
+      return {
+        ok: false as const,
+        message:
+          err instanceof Error
+            ? err.message === "401: Unauthorized"
+              ? "Discord rejected that token"
+              : err.message
+            : "Could not reach Discord",
+      };
+    }
+  });
+
+/** Save a server + its channels using a verified bot token. */
+export const connectServer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { orgId: string; botToken: string; guildId: string }) => input)
+  .handler(async ({ data, context }) => {
+    await assertRole(context as Ctx, data.orgId, ["super_admin", "admin"]);
+    const { fetchBotIdentity, fetchBotGuilds, fetchGuildChannels } = await import(
+      "./discord.server"
+    );
+    const token = data.botToken.trim().replace(/^Bot\s+/i, "");
+
+    let bot, guilds, channels;
+    try {
+      bot = await fetchBotIdentity(token);
+      guilds = await fetchBotGuilds(token);
+      channels = await fetchGuildChannels(token, data.guildId);
+    } catch (err) {
+      return {
+        ok: false as const,
+        message: err instanceof Error ? err.message : "Could not reach Discord",
+      };
+    }
+    const guild = guilds.find((g) => g.id === data.guildId);
+    if (!guild) return { ok: false as const, message: "The bot is not in that server" };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: existing } = await supabaseAdmin
+      .from("servers")
+      .select("id")
+      .eq("org_id", data.orgId)
+      .eq("guild_id", guild.id)
+      .maybeSingle();
+
+    let serverId = existing?.id;
+    const payload = {
+      org_id: data.orgId,
+      name: guild.name,
+      guild_id: guild.id,
+      icon_url: guild.iconUrl,
+      bot_name: bot.username,
+      bot_avatar_url: bot.avatarUrl,
+      bot_id: bot.id,
+      connected: true,
+    };
+    if (serverId) {
+      await supabaseAdmin.from("servers").update(payload).eq("id", serverId);
+    } else {
+      const { data: inserted, error } = await supabaseAdmin
+        .from("servers")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) return { ok: false as const, message: error.message };
+      serverId = inserted.id;
+    }
+
+    await supabaseAdmin
+      .from("server_secrets")
+      .upsert({ server_id: serverId, bot_token: token, updated_at: new Date().toISOString() });
+
+    for (const channel of channels) {
+      await supabaseAdmin.from("channels").upsert(
+        {
+          org_id: data.orgId,
+          server_id: serverId,
+          discord_id: channel.id,
+          name: channel.name,
+          requires_approval: channel.type === 5,
+        },
+        { onConflict: "server_id,discord_id", ignoreDuplicates: true },
+      );
+    }
+
+    return {
+      ok: true as const,
+      message: `${guild.name} connected with ${channels.length} channels`,
+      serverId,
+    };
+  });
+
+/** Re-read the channel list for a saved server. */
+export const syncChannels = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { serverId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: server } = await supabaseAdmin
+      .from("servers")
+      .select("id, org_id, guild_id")
+      .eq("id", data.serverId)
+      .single();
+    if (!server?.guild_id) return { ok: false as const, message: "Server not found" };
+    await assertRole(context as Ctx, server.org_id, ["super_admin", "admin"]);
+
+    const { data: secret } = await supabaseAdmin
+      .from("server_secrets")
+      .select("bot_token")
+      .eq("server_id", server.id)
+      .single();
+    if (!secret?.bot_token) return { ok: false as const, message: "No bot token saved" };
+
+    const { fetchGuildChannels } = await import("./discord.server");
+    try {
+      const channels = await fetchGuildChannels(secret.bot_token, server.guild_id);
+      for (const channel of channels) {
+        await supabaseAdmin.from("channels").upsert(
+          {
+            org_id: server.org_id,
+            server_id: server.id,
+            discord_id: channel.id,
+            name: channel.name,
+          },
+          { onConflict: "server_id,discord_id" },
+        );
+      }
+      return { ok: true as const, message: `${channels.length} channels synced` };
+    } catch (err) {
+      return {
+        ok: false as const,
+        message: err instanceof Error ? err.message : "Could not reach Discord",
+      };
+    }
+  });
+
+/** Send a one-off test message to a channel so the user can confirm the bot works. */
+export const sendTestMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { channelId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: channel } = await supabaseAdmin
+      .from("channels")
+      .select("id, org_id, discord_id, name, server_id")
+      .eq("id", data.channelId)
+      .single();
+    if (!channel) return { ok: false as const, message: "Channel not found" };
+    await assertRole(context as Ctx, channel.org_id, ["super_admin", "admin"]);
+
+    const { data: secret } = await supabaseAdmin
+      .from("server_secrets")
+      .select("bot_token")
+      .eq("server_id", channel.server_id)
+      .single();
+    if (!secret?.bot_token) return { ok: false as const, message: "No bot token saved" };
+
+    const { sendDiscordMessage } = await import("./discord.server");
+    try {
+      await sendDiscordMessage(secret.bot_token, channel.discord_id, {
+        embeds: [
+          {
+            title: "Connection test",
+            description: "Your bot can post here. Approvals and scheduling are live.",
+            color: 0x5865f2,
+            timestamp: new Date().toISOString(),
+          },
+        ],
+      });
+      return { ok: true as const, message: `Test message sent to #${channel.name}` };
+    } catch (err) {
+      return {
+        ok: false as const,
+        message: err instanceof Error ? err.message : "Discord rejected the test",
+      };
+    }
+  });
+
+/** Publish a post to Discord right now. */
+export const publishPost = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { postId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: post, error } = await ctx.supabase
+      .from("posts")
+      .select("id, org_id, status, created_by")
+      .eq("id", data.postId)
+      .single();
+    if (error || !post) return { ok: false as const, message: "Post not found" };
+
+    const role = await assertRole(ctx, post.org_id, [
+      "super_admin",
+      "admin",
+      "approver",
+      "user",
+    ]);
+    const privileged = role === "super_admin" || role === "admin";
+    const canPublish =
+      privileged ||
+      (role === "approver" && ["approved", "scheduled"].includes(post.status as string)) ||
+      (post.created_by === ctx.userId && post.status === "approved");
+    if (!canPublish) {
+      return { ok: false as const, message: "This post needs approval before it can be sent" };
+    }
+
+    const { deliverPost } = await import("./discord.server");
+    return deliverPost(data.postId);
+  });
