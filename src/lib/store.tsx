@@ -119,7 +119,7 @@ interface StoreValue {
   removeTemplate: (id: string) => Promise<void>;
   bumpTemplate: (id: string) => Promise<void>;
   saveEvent: (
-    event: Omit<OrgEvent, "orgId" | "createdBy"> & { id?: string },
+    event: Omit<OrgEvent, "orgId" | "createdBy" | "id"> & { id?: string },
   ) => Promise<void>;
   removeEvent: (id: string) => Promise<void>;
 }
