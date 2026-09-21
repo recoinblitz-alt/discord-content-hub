@@ -418,9 +418,14 @@ export async function deliverPost(postId: string) {
   try {
     const urls = Array.isArray(post.attachments) ? (post.attachments as string[]) : [];
     const wantsUpload = (post as { media_mode?: string | null }).media_mode === "upload";
-    const { files, leftovers } = wantsUpload
+    const { files, leftovers, skipped } = wantsUpload
       ? await resolveUploadFiles(post.org_id, urls)
-      : { files: [] as OutgoingFile[], leftovers: urls };
+      : { files: [] as OutgoingFile[], leftovers: urls, skipped: [] as { url: string; reason: string }[] };
+    const skipNote = skipped.length
+      ? ` — ${skipped.length} picture${skipped.length > 1 ? "s" : ""} sent as embed image instead (${[
+          ...new Set(skipped.map((s) => s.reason)),
+        ].join("; ")})`
+      : "";
 
     // Anything that couldn't be uploaded still shows up as an embed image.
     const payload = buildDiscordPayload({
