@@ -299,7 +299,90 @@ export async function resolveUploadFiles(orgId: string, urls: string[]) {
     const filename = base.toLowerCase().endsWith(`.${ext.toLowerCase()}`) ? base : `${base}.${ext}`;
     files.push({ filename, blob });
   }
-  return { files, leftovers };
+  return { files, leftovers, skipped };
+}
+
+export interface GuildRole {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+}
+
+export interface GuildMemberRow {
+  userId: string;
+  username: string;
+  globalName: string;
+  displayName: string;
+  isBot: boolean;
+  joinedAt: string;
+  roleIds: string[];
+  roleNames: string[];
+}
+
+const MEMBERS_INTENT_HINT =
+  "Discord refused the member list. Open the Discord Developer Portal, pick this bot, and switch on \"Server Members Intent\" under Bot → Privileged Gateway Intents, then try again.";
+
+export async function fetchGuildRoles(token: string, guildId: string): Promise<GuildRole[]> {
+  const roles = (await discordFetch(token, `/guilds/${guildId}/roles`)) as {
+    id: string;
+    name: string;
+    color: number;
+    position: number;
+  }[];
+  return roles
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      color: `#${(r.color ?? 0).toString(16).padStart(6, "0")}`,
+      position: r.position,
+    }))
+    .sort((a, b) => b.position - a.position);
+}
+
+/** Pages through every member of a guild (1000 per request). */
+export async function fetchGuildMembers(token: string, guildId: string) {
+  const roles = await fetchGuildRoles(token, guildId);
+  const roleName = new Map(roles.map((r) => [r.id, r.name]));
+  const members: GuildMemberRow[] = [];
+  let after = "0";
+
+  try {
+    for (let page = 0; page < 200; page += 1) {
+      const batch = (await discordFetch(
+        token,
+        `/guilds/${guildId}/members?limit=1000&after=${after}`,
+      )) as {
+        user: { id: string; username: string; global_name?: string | null; bot?: boolean };
+        nick?: string | null;
+        joined_at: string;
+        roles: string[];
+      }[];
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      for (const m of batch) {
+        members.push({
+          userId: m.user.id,
+          username: m.user.username,
+          globalName: m.user.global_name ?? "",
+          displayName: m.nick || m.user.global_name || m.user.username,
+          isBot: m.user.bot === true,
+          joinedAt: m.joined_at,
+          roleIds: m.roles ?? [],
+          roleNames: (m.roles ?? []).map((id) => roleName.get(id) ?? id),
+        });
+      }
+      const last = batch[batch.length - 1];
+      if (!last) break;
+      after = last.user.id;
+      if (batch.length < 1000) break;
+    }
+  } catch (err) {
+    const status = (err as DiscordError).status;
+    if (status === 403 || status === 401) throw new Error(MEMBERS_INTENT_HINT);
+    throw err;
+  }
+
+  return { members, roles };
 }
 
 export { BUTTON_STYLE };
