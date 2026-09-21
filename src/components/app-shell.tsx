@@ -262,7 +262,7 @@ export function AppShell({
             <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
             {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
           </div>
-          <div className="flex max-w-full shrink-0 flex-wrap items-center justify-end gap-2">{actions}</div>
+          <div className="col-span-2 flex max-w-full flex-wrap items-center justify-start gap-2 sm:col-span-1 sm:shrink-0 sm:justify-end">{actions}</div>
         </div>
       </header>
       <div className="overflow-hidden px-4 py-5 md:px-8 md:py-6">{children}</div>

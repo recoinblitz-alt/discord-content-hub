@@ -49,6 +49,10 @@ function Team() {
   } = useWorkspace();
   const roles: Role[] = ["super_admin", "admin", "approver", "user"];
   const assignableRoles: Role[] = currentUser.role === "super_admin" ? roles : ["admin", "approver", "user"];
+  const roleOptions = (memberRole: Role): Role[] =>
+    memberRole === "super_admin" && !assignableRoles.includes("super_admin")
+      ? ["super_admin"]
+      : assignableRoles;
 
   if (!permissions.manageTeam) {
     return (
@@ -76,7 +80,7 @@ function Team() {
                 </div>
                 <div className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-t border-border pt-3">
                   <select value={m.role} disabled={currentUser.id === m.id || (currentUser.role === "admin" && m.role === "super_admin")} onChange={(e) => void setMemberRole(m.id, e.target.value as Role).catch((error) => toast.error(error instanceof Error ? error.message : "Could not change role"))} className="min-w-0 rounded-lg border border-input bg-background px-2 py-2 text-sm disabled:opacity-60">
-                    {(m.role === "super_admin" && !assignableRoles.includes("super_admin") ? ["super_admin"] : assignableRoles).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
+                    {roleOptions(m.role).map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                   </select>
                   {currentUser.id === m.id ? <span className="rounded-lg border border-primary bg-primary/15 px-3 py-2 text-xs text-primary">You</span> : !(currentUser.role === "admin" && m.role === "super_admin") && <Button size="sm" variant="ghost" onClick={() => void removeMember(m.id).catch((error) => toast.error(error instanceof Error ? error.message : "Could not remove member"))}>Remove</Button>}
                 </div>
@@ -116,7 +120,7 @@ function Team() {
                       }}
                       className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm disabled:opacity-60"
                     >
-                      {(m.role === "super_admin" && !assignableRoles.includes("super_admin") ? ["super_admin"] : assignableRoles).map((r) => (
+                      {roleOptions(m.role).map((r) => (
                         <option key={r} value={r}>
                           {ROLE_LABELS[r]}
                         </option>
