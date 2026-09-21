@@ -4,10 +4,10 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { fullDate } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import type { AuditAction } from "@/lib/types";
 
-export const Route = createFileRoute("/history")({
+export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
       { title: "Audit trail — Relaystack" },
@@ -43,7 +43,7 @@ const ACTIONS: (AuditAction | "all")[] = [
 ];
 
 function History() {
-  const { state, orgPosts, memberOf, channelOf } = useStore();
+  const { state, orgPosts, memberOf, channelOf } = useWorkspace();
   const [action, setAction] = useState<AuditAction | "all">("all");
   const [actor, setActor] = useState("all");
 

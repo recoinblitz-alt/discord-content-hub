@@ -34,7 +34,6 @@ export interface Organization {
   id: string;
   name: string;
   tag: string;
-  accent: string;
   plan: string;
 }
 
@@ -51,6 +50,7 @@ export interface Member {
 export interface Channel {
   id: string;
   serverId: string;
+  discordId: string;
   name: string;
   type: "text" | "announcement";
   requiresApproval: boolean;
@@ -60,13 +60,11 @@ export interface DiscordServer {
   id: string;
   orgId: string;
   name: string;
+  guildId: string;
   icon: string;
   botName: string;
   botAvatar: string;
-  connection: "bot_token" | "webhook";
-  credential: string;
   connected: boolean;
-  memberCount: number;
 }
 
 export interface EmbedField {
@@ -166,19 +164,6 @@ export interface MediaAsset {
   addedAt: string;
 }
 
-export interface AppState {
-  organizations: Organization[];
-  members: Member[];
-  servers: DiscordServer[];
-  channels: Channel[];
-  posts: Post[];
-  templates: Template[];
-  media: MediaAsset[];
-  audit: AuditEntry[];
-  currentOrgId: string;
-  currentUserId: string;
-}
-
 export const DISCORD_COLORS: { name: string; hex: string }[] = [
   { name: "Blurple", hex: "#5865F2" },
   { name: "Green", hex: "#57F287" },
@@ -269,3 +254,5 @@ export const TIMEZONES = [
   "Asia/Singapore",
   "Australia/Sydney",
 ];
+
+export type MediaAssetKind = MediaAsset["kind"];

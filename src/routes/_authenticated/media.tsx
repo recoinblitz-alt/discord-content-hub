@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fullDate } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 
-export const Route = createFileRoute("/media")({
+export const Route = createFileRoute("/_authenticated/media")({
   head: () => ({
     meta: [
       { title: "Media library — Relaystack" },
@@ -29,30 +29,26 @@ export const Route = createFileRoute("/media")({
 });
 
 function Media() {
-  const { orgMedia, addMedia, removeMedia } = useStore();
+  const { orgMedia, addMedia, removeMedia } = useWorkspace();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [kind, setKind] = useState<"banner" | "thumbnail" | "icon">("banner");
   const [tags, setTags] = useState("");
 
-  const submit = () => {
+  const submit = async () => {
     if (!name.trim() || !url.trim()) {
       toast.error("Name and image URL are required");
       return;
     }
-    addMedia({
-      name: name.trim(),
-      url: url.trim(),
-      kind,
-      tags: tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    });
-    setName("");
-    setUrl("");
-    setTags("");
-    toast.success("Asset added to the library");
+    try {
+      await addMedia({ name: name.trim(), url: url.trim(), kind });
+      setName("");
+      setUrl("");
+      setTags("");
+      toast.success("Asset added to the library");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not add that asset");
+    }
   };
 
   return (

@@ -2,10 +2,10 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { ROLE_LABELS, permissionsFor, type Role } from "@/lib/types";
 
-export const Route = createFileRoute("/team")({
+export const Route = createFileRoute("/_authenticated/team")({
   head: () => ({
     meta: [
       { title: "Team & roles — Relaystack" },
@@ -34,8 +34,15 @@ const PERMISSION_ROWS = [
 ] as const;
 
 function Team() {
-  const { orgMembers, currentOrg, currentUser, setUser, setRole, permissions, orgPosts } =
-    useStore();
+  const {
+    orgMembers,
+    currentOrg,
+    currentUser,
+    setMemberRole,
+    removeMember,
+    permissions,
+    orgPosts,
+  } = useWorkspace();
   const roles: Role[] = ["super_admin", "admin", "approver", "user"];
 
   return (
@@ -70,7 +77,7 @@ function Team() {
                     <select
                       value={m.role}
                       disabled={!permissions.manageTeam}
-                      onChange={(e) => setRole(m.id, e.target.value as Role)}
+                      onChange={(e) => void setMemberRole(m.id, e.target.value as Role)}
                       className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm disabled:opacity-60"
                     >
                       {roles.map((r) => (
@@ -84,16 +91,20 @@ function Team() {
                     {orgPosts.filter((p) => p.authorId === m.id).length}
                   </td>
                   <td className="px-4 py-3 text-right">
-                    <button
-                      onClick={() => setUser(m.id)}
-                      className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-                        currentUser.id === m.id
-                          ? "border-primary bg-primary/15 text-primary"
-                          : "border-border text-muted-foreground hover:bg-accent"
-                      }`}
-                    >
-                      {currentUser.id === m.id ? "Acting as" : "Simulate"}
-                    </button>
+                    {currentUser.id === m.id ? (
+                      <span className="rounded-lg border border-primary bg-primary/15 px-3 py-1.5 text-xs text-primary">
+                        You
+                      </span>
+                    ) : (
+                      permissions.manageTeam && (
+                        <button
+                          onClick={() => void removeMember(m.id)}
+                          className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          Remove
+                        </button>
+                      )
+                    )}
                   </td>
                 </tr>
               ))}

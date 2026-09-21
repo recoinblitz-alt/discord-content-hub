@@ -8,10 +8,10 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fullDate, relative } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 
-export const Route = createFileRoute("/posts")({
+export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
       { title: "All posts — Relaystack" },
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/posts")({
 
 function Posts() {
   const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf, memberOf, deletePost } =
-    useStore();
+    useWorkspace();
   const [status, setStatus] = useState<PostStatus | "all">("all");
   const [serverId, setServerId] = useState("all");
   const [channelId, setChannelId] = useState("all");

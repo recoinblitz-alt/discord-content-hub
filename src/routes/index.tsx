@@ -1,220 +1,98 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  CalendarClock,
-  CheckCheck,
-  FileText,
-  PenSquare,
-  Send,
-} from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { CalendarClock, CheckCheck, MessageSquare, Zap } from "lucide-react";
+import { useEffect } from "react";
 
-import { AppShell } from "@/components/app-shell";
-import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
-import { fullDate, relative } from "@/lib/format";
-import { useStore } from "@/lib/store";
-import { STATUS_LABELS, type PostStatus } from "@/lib/types";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Relaystack Discord content ops" },
+      { title: "Relaystack — Discord scheduling, approvals and embeds" },
       {
         name: "description",
         content:
-          "Pipeline overview of Discord drafts, approvals, scheduled announcements and delivery health.",
+          "Draft Discord announcements with a live embed preview, route them through approvals, schedule them, and let your bot publish automatically.",
       },
-      { property: "og:title", content: "Dashboard — Relaystack Discord content ops" },
+      { property: "og:title", content: "Relaystack — Discord content operations" },
       {
         property: "og:description",
-        content: "Pipeline overview of Discord drafts, approvals and scheduled announcements.",
+        content:
+          "Live embed builder, approval queue, content calendar and real bot delivery for your Discord servers.",
       },
     ],
   }),
-  component: Dashboard,
+  component: Landing,
 });
 
-function Dashboard() {
-  const { currentOrg, currentUser, orgPosts, state, serverOf, channelOf, memberOf, permissions } =
-    useStore();
+const features = [
+  {
+    icon: MessageSquare,
+    title: "Live embed builder",
+    body: "Compose messages and rich embeds with a preview that matches Discord exactly.",
+  },
+  {
+    icon: CheckCheck,
+    title: "Approvals that stick",
+    body: "Route announcement channels through approvers with comments and full history.",
+  },
+  {
+    icon: CalendarClock,
+    title: "Scheduled delivery",
+    body: "Your bot posts at the exact time you picked, in the timezone you picked.",
+  },
+];
 
-  const count = (s: PostStatus) => orgPosts.filter((p) => p.status === s).length;
-  const pending = orgPosts.filter((p) => p.status === "pending");
-  const upcoming = orgPosts
-    .filter((p) => (p.status === "scheduled" || p.status === "approved") && p.scheduledAt)
-    .sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""))
-    .slice(0, 5);
-  const mine = orgPosts.filter((p) => p.authorId === currentUser.id);
-  const activity = state.audit
-    .filter((a) => orgPosts.some((p) => p.id === a.postId))
-    .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 8);
+function Landing() {
+  const navigate = useNavigate();
 
-  const stats = [
-    { label: "Pending approval", value: count("pending"), icon: CheckCheck, tone: "text-warning" },
-    { label: "Scheduled", value: count("scheduled"), icon: CalendarClock, tone: "text-blurple" },
-    { label: "Published", value: count("published"), icon: Send, tone: "text-success" },
-    {
-      label: "Needs attention",
-      value: count("changes_requested") + count("failed") + count("rejected"),
-      icon: AlertTriangle,
-      tone: "text-destructive",
-    },
-  ];
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      if (data.session) navigate({ to: "/dashboard", replace: true });
+    });
+  }, [navigate]);
 
   return (
-    <AppShell
-      title={`${currentOrg.name} workspace`}
-      subtitle={`${orgPosts.length} posts · ${state.servers.filter((s) => s.orgId === currentOrg.id).length} connected servers`}
-      actions={
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="flex items-center justify-between px-6 py-5 md:px-10">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blurple text-blurple-foreground">
+            <Zap className="h-5 w-5" />
+          </div>
+          <span className="font-display text-sm font-semibold">Relaystack</span>
+        </div>
         <Button asChild size="sm">
-          <Link to="/composer">
-            <PenSquare className="h-4 w-4" /> New post
-          </Link>
+          <Link to="/auth">Sign in</Link>
         </Button>
-      }
-    >
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {stats.map((s) => (
-          <div key={s.label} className="rounded-xl border border-border bg-surface p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{s.label}</span>
-              <s.icon className={`h-4 w-4 ${s.tone}`} />
+      </header>
+
+      <main className="mx-auto max-w-4xl px-6 pb-24 pt-10 md:pt-20">
+        <p className="text-xs font-semibold uppercase tracking-widest text-blurple">
+          Discord content operations
+        </p>
+        <h1 className="mt-3 font-display text-4xl font-semibold leading-tight md:text-5xl">
+          Plan, approve and publish every Discord announcement in one place.
+        </h1>
+        <p className="mt-4 max-w-2xl text-base text-muted-foreground">
+          Connect your bot, draft embeds with a pixel-accurate preview, send them through approval,
+          and schedule delivery down to the minute.
+        </p>
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Button asChild size="lg">
+            <Link to="/auth">Get started</Link>
+          </Button>
+        </div>
+
+        <div className="mt-16 grid gap-4 sm:grid-cols-3">
+          {features.map((f) => (
+            <div key={f.title} className="rounded-xl border border-border bg-surface p-5">
+              <f.icon className="h-5 w-5 text-blurple" />
+              <h2 className="mt-3 font-display text-sm font-semibold">{f.title}</h2>
+              <p className="mt-1.5 text-sm text-muted-foreground">{f.body}</p>
             </div>
-            <div className="mt-2 font-display text-3xl font-semibold">{s.value}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <section className="rounded-xl border border-border bg-surface lg:col-span-2">
-          <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Approval queue</h2>
-            {permissions.approve && (
-              <Link to="/approvals" className="text-xs text-primary hover:underline">
-                Review all
-              </Link>
-            )}
-          </div>
-          <div className="divide-y divide-border">
-            {pending.length === 0 && (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-                Nothing waiting on review.
-              </p>
-            )}
-            {pending.map((p) => (
-              <Link
-                key={p.id}
-                to="/composer"
-                search={{ postId: p.id }}
-                className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-accent/40"
-              >
-                <img
-                  src={memberOf(p.authorId)?.avatar}
-                  alt=""
-                  className="h-8 w-8 rounded-full bg-muted"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{p.title}</div>
-                  <div className="truncate text-xs text-muted-foreground">
-                    {serverOf(p.serverId)?.name} · #{channelOf(p.channelId)?.name} · by{" "}
-                    {memberOf(p.authorId)?.name} · {relative(p.updatedAt)}
-                  </div>
-                </div>
-                <StatusBadge status={p.status} />
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-border bg-surface">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Up next</h2>
-          </div>
-          <div className="divide-y divide-border">
-            {upcoming.length === 0 && (
-              <p className="px-5 py-8 text-center text-sm text-muted-foreground">
-                No scheduled posts.
-              </p>
-            )}
-            {upcoming.map((p) => (
-              <div key={p.id} className="px-5 py-3.5">
-                <div className="flex items-start justify-between gap-2">
-                  <span className="text-sm font-medium">{p.title}</span>
-                  <StatusBadge status={p.status} />
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {fullDate(p.scheduledAt)} {p.timezone} · #{channelOf(p.channelId)?.name}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-3">
-        <section className="rounded-xl border border-border bg-surface lg:col-span-2">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Recent activity</h2>
-          </div>
-          <ol className="divide-y divide-border">
-            {activity.map((a) => {
-              const post = orgPosts.find((p) => p.id === a.postId);
-              return (
-                <li key={a.id} className="flex gap-3 px-5 py-3">
-                  <img
-                    src={memberOf(a.actorId)?.avatar}
-                    alt=""
-                    className="mt-0.5 h-7 w-7 rounded-full bg-muted"
-                  />
-                  <div className="min-w-0 flex-1 text-sm">
-                    <span className="font-medium">{memberOf(a.actorId)?.name}</span>{" "}
-                    <span className="text-muted-foreground">
-                      {a.action.replace(/_/g, " ")} · {post?.title}
-                    </span>
-                    {a.note && <p className="mt-0.5 text-xs text-muted-foreground">“{a.note}”</p>}
-                  </div>
-                  <span className="whitespace-nowrap text-xs text-muted-foreground">
-                    {relative(a.at)}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-
-        <section className="rounded-xl border border-border bg-surface">
-          <div className="border-b border-border px-5 py-3.5">
-            <h2 className="text-sm font-semibold">Your work</h2>
-          </div>
-          <div className="space-y-3 p-5">
-            <p className="text-sm text-muted-foreground">
-              {mine.length} posts authored by you in this organization.
-            </p>
-            <div className="space-y-1.5">
-              {(
-                [
-                  "draft",
-                  "changes_requested",
-                  "pending",
-                  "scheduled",
-                  "published",
-                ] as PostStatus[]
-              ).map((s) => (
-                <div key={s} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{STATUS_LABELS[s]}</span>
-                  <span className="font-medium">{mine.filter((p) => p.status === s).length}</span>
-                </div>
-              ))}
-            </div>
-            <Button asChild variant="outline" className="w-full">
-              <Link to="/posts">
-                <FileText className="h-4 w-4" /> Open post list
-              </Link>
-            </Button>
-          </div>
-        </section>
-      </div>
-    </AppShell>
+          ))}
+        </div>
+      </main>
+    </div>
   );
 }
