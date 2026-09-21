@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { acceptInvite } from "@/lib/invites.functions";
+import { acceptInvite, inspectInvite } from "@/lib/invites.functions";
+import { ROLE_LABELS, type Role } from "@/lib/types";
 
 export const Route = createFileRoute("/invite/$token")({
   ssr: false,
@@ -34,6 +35,7 @@ function AcceptInvite() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [invite, setInvite] = useState<{ organizationName: string; emailHint: string; role: Role } | null>(null);
 
   const completeAcceptance = async () => {
     setState("working");
@@ -51,6 +53,19 @@ function AcceptInvite() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      const preview = await inspectInvite({ data: { token } });
+      if (cancelled) return;
+      if (!preview.valid) {
+        localStorage.removeItem(PENDING_INVITE_KEY);
+        setMessage(preview.message);
+        setState("error");
+        return;
+      }
+      setInvite({
+        organizationName: preview.organizationName,
+        emailHint: preview.emailHint,
+        role: preview.role,
+      });
       const { data } = await supabase.auth.getSession();
       if (cancelled) return;
       if (!data.session) {
@@ -138,6 +153,11 @@ function AcceptInvite() {
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm rounded-xl border border-border bg-surface p-6 text-center">
         <h1 className="text-lg font-semibold">Workspace invitation</h1>
+        {invite && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Join {invite.organizationName} as {ROLE_LABELS[invite.role]} using {invite.emailHint}.
+          </p>
+        )}
         {state === "checking" || state === "working" ? (
           <p className="mt-2 text-sm text-muted-foreground">Checking your invitation…</p>
         ) : state === "signin" ? (
@@ -186,7 +206,7 @@ function AcceptInvite() {
         ) : (
           <>
             <p className="mt-2 text-sm text-destructive">{message}</p>
-            <Button className="mt-4 w-full" onClick={() => void completeAcceptance()}>Try again</Button>
+            <Button className="mt-4 w-full" onClick={() => window.location.reload()}>Check invitation again</Button>
             <Button variant="outline" className="mt-2 w-full" onClick={() => setState("signin")}>Sign in with another account</Button>
           </>
         )}

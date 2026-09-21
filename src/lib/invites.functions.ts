@@ -47,11 +47,29 @@ export const createInvite = createServerFn({ method: "POST" })
       return { ok: false as const, message: "That email address does not look right." };
     }
 
-    const { data: row, error } = await context.supabase
+    const { data: pendingInvite, error: pendingError } = await context.supabase
       .from("invites")
-      .insert({ org_id: data.orgId, email, role: data.role, created_by: context.userId })
       .select("token")
-      .single();
+      .eq("org_id", data.orgId)
+      .eq("email", email)
+      .is("accepted_at", null)
+      .maybeSingle();
+    if (pendingError) return { ok: false as const, message: pendingError.message };
+
+    const inviteWrite = pendingInvite
+      ? context.supabase
+          .from("invites")
+          .update({ role: data.role, created_by: context.userId })
+          .eq("org_id", data.orgId)
+          .eq("token", pendingInvite.token)
+          .select("token")
+          .single()
+      : context.supabase
+          .from("invites")
+          .insert({ org_id: data.orgId, email, role: data.role, created_by: context.userId })
+          .select("token")
+          .single();
+    const { data: row, error } = await inviteWrite;
     if (error) return { ok: false as const, message: error.message };
 
     const origin = new URL(data.origin).origin;
@@ -79,10 +97,42 @@ export const createInvite = createServerFn({ method: "POST" })
       token: row.token,
       email,
       emailSent: !emailError,
+      reused: Boolean(pendingInvite),
       message: emailError
-        ? "Invite created, but the email could not be delivered. Copy and share the link instead."
-        : "Invitation email sent.",
+        ? "The invite link is ready, but email delivery failed. Copy and share the link below."
+        : pendingInvite
+          ? "The existing invitation was updated and emailed again."
+          : "Invitation email sent.",
     };
+  });
+
+export const inspectInvite = createServerFn({ method: "GET" })
+  .inputValidator((input: { token: string }) => input)
+  .handler(async ({ data }) => {
+    const authClient = publicAuthClient();
+    if (!authClient) {
+      return {
+        valid: false as const,
+        reason: "configuration" as const,
+        message: "Invitations are not configured on this deployment. Ask an administrator to check the deployment settings.",
+      };
+    }
+    const { data: result, error } = await authClient.rpc("get_org_invite_preview", { _token: data.token });
+    if (error) {
+      const unavailable =
+        ["PGRST202", "42883"].includes(error.code ?? "") ||
+        /could not find the function|does not exist/i.test(error.message);
+      return {
+        valid: false as const,
+        reason: unavailable ? ("deployment" as const) : ("unknown" as const),
+        message: unavailable
+          ? "Invitations are not ready on this deployment. Ask an administrator to apply the latest database updates."
+          : "We could not check this invitation. Please try again.",
+      };
+    }
+    return result as
+      | { valid: true; organizationName: string; emailHint: string; role: Role; accepted: boolean }
+      | { valid: false; message: string };
   });
 
 export const acceptInvite = createServerFn({ method: "POST" })
@@ -108,7 +158,7 @@ export const acceptInvite = createServerFn({ method: "POST" })
       return {
         ok: false as const,
         message: stillStale
-          ? "We couldn't complete your invitation. Please try again in a moment."
+          ? "Invitations are not ready on this deployment. Ask an administrator to apply the latest database updates."
           : error.message,
       };
     }
