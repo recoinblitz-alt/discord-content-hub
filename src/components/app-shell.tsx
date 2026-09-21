@@ -7,6 +7,7 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   LogOut,
+  Menu,
   Moon,
   PenSquare,
   Plus,
@@ -21,6 +22,15 @@ import { toast } from "sonner";
 import { LegalFooter } from "@/components/legal-page";
 import { BrandLogo } from "@/components/brand-logo";
 import { Button } from "@/components/ui/button";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { useWorkspace } from "@/lib/store";
 import { useTheme } from "@/lib/use-theme";
 import { ROLE_LABELS } from "@/lib/types";
@@ -53,6 +63,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
   const { theme, toggle } = useTheme();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [creating, setCreating] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const approvalChannels = new Set(
     orgChannels.filter((c) => c.requiresApproval).map((c) => c.id),
@@ -123,6 +134,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
               const active = pathname.startsWith(item.to);
               const hidden =
                 (item.to === "/settings" && !permissions.configureServers) ||
+                (item.to === "/team" && !permissions.manageTeam) ||
                 (item.to === "/approvals" && !permissions.approve);
               if (hidden) return null;
               return (
@@ -176,8 +188,8 @@ export function AppFrame({ children }: { children: ReactNode }) {
 
         <main className="min-w-0 flex-1">
           <div className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur lg:hidden">
-            <div className="flex items-center justify-between gap-3 px-4 py-3">
-              <div className="flex items-center gap-2 font-display text-sm font-semibold">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
+              <div className="flex min-w-0 items-center gap-2 font-display text-sm font-semibold">
                 <BrandLogo className="h-6 w-6" /> MUNO
               </div>
               <div className="flex items-center gap-2">
@@ -187,19 +199,41 @@ export function AppFrame({ children }: { children: ReactNode }) {
                 <Button variant="ghost" size="sm" onClick={() => void signOut()} title="Sign out">
                   <LogOut className="h-4 w-4" />
                 </Button>
+                <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" size="icon" aria-label="Open navigation">
+                      <Menu className="h-4 w-4" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="right" className="flex w-[88vw] max-w-sm flex-col p-0">
+                    <SheetHeader className="border-b border-border px-5 py-5 text-left">
+                      <SheetTitle className="flex items-center gap-2">
+                        <BrandLogo className="h-8 w-8" /> MUNO
+                      </SheetTitle>
+                      <SheetDescription>{ROLE_LABELS[currentUser.role]} · {currentOrg.name}</SheetDescription>
+                    </SheetHeader>
+                    <div className="border-b border-border p-4">
+                      <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">Workspace</label>
+                      <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+                        <select value={currentOrg.id} onChange={(e) => setOrg(e.target.value)} className="min-w-0 rounded-lg border border-input bg-background px-3 py-2.5 text-sm">
+                          {organizations.map((org) => <option key={org.id} value={org.id}>{org.name}</option>)}
+                        </select>
+                        {permissions.manageOrganizations && <Button size="icon" variant="outline" onClick={() => void newWorkspace()}><Plus className="h-4 w-4" /></Button>}
+                      </div>
+                    </div>
+                    <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+                      {nav.filter((item) => !((item.to === "/settings" && !permissions.configureServers) || (item.to === "/team" && !permissions.manageTeam) || (item.to === "/approvals" && !permissions.approve))).map((item) => (
+                        <SheetClose asChild key={item.to}>
+                          <Link to={item.to} preload="intent" className={`flex min-h-11 items-center gap-3 rounded-lg px-3 text-sm ${pathname.startsWith(item.to) ? "bg-accent font-medium text-accent-foreground" : "text-muted-foreground"}`}>
+                            <item.icon className="h-4 w-4 shrink-0" /><span className="min-w-0 flex-1 truncate">{item.label}</span>
+                            {item.to === "/approvals" && pendingCount > 0 && <span className="rounded-full bg-warning px-2 py-0.5 text-xs text-warning-foreground">{pendingCount}</span>}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </nav>
+                  </SheetContent>
+                </Sheet>
               </div>
-            </div>
-            <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2">
-              {nav.map((item) => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  preload="intent"
-                  className="whitespace-nowrap rounded-lg px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent"
-                >
-                  {item.label}
-                </Link>
-              ))}
             </div>
           </div>
           {children}
@@ -222,17 +256,17 @@ export function AppShell({
 }) {
   return (
     <div className="page-enter">
-      <header className="sticky top-[105px] z-20 border-b border-border bg-background/85 backdrop-blur lg:top-0">
-        <div className="flex flex-wrap items-center gap-3 px-5 py-4 md:px-8">
+      <header className="sticky top-[61px] z-20 border-b border-border bg-background/85 backdrop-blur lg:top-0">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-4 md:px-8">
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-display text-xl font-semibold">{title}</h1>
             {subtitle && <p className="truncate text-sm text-muted-foreground">{subtitle}</p>}
           </div>
-          <div className="flex items-center gap-2">{actions}</div>
+          <div className="col-span-2 flex max-w-full flex-wrap items-center justify-start gap-2 sm:col-span-1 sm:shrink-0 sm:justify-end">{actions}</div>
         </div>
       </header>
-      <div className="px-5 py-6 md:px-8">{children}</div>
-      <LegalFooter className="border-t border-border px-5 py-5 md:px-8" />
+      <div className="overflow-hidden px-4 py-5 md:px-8 md:py-6">{children}</div>
+      <LegalFooter className="border-t border-border px-4 py-5 md:px-8" />
     </div>
   );
 }

@@ -7,7 +7,7 @@ const MANAGER_ROLES = ["super_admin", "admin"];
 
 export const createInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { orgId: string; email: string; role: Role }) => input)
+  .inputValidator((input: { orgId: string; email: string; role: Role; origin: string }) => input)
   .handler(async ({ data, context }) => {
     const { data: membership } = await context.supabase
       .from("org_members")
@@ -17,6 +17,9 @@ export const createInvite = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!membership || !MANAGER_ROLES.includes(membership.role)) {
       return { ok: false as const, message: "Only owners and admins can invite people." };
+    }
+    if (data.role === "super_admin" && membership.role !== "super_admin") {
+      return { ok: false as const, message: "Only a Super Admin can invite another Super Admin." };
     }
 
     const email = data.email.trim().toLowerCase();
@@ -31,51 +34,34 @@ export const createInvite = createServerFn({ method: "POST" })
       .single();
     if (error) return { ok: false as const, message: error.message };
 
-    return { ok: true as const, token: row.token, email };
+    const origin = new URL(data.origin).origin;
+    const inviteUrl = `${origin}/invite/${row.token}?invited=1`;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error: emailError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: inviteUrl,
+      data: { invited_org_id: data.orgId, invited_role: data.role },
+    });
+
+    return {
+      ok: true as const,
+      token: row.token,
+      email,
+      emailSent: !emailError,
+      message: emailError
+        ? "Invite created. This address already has an account or email delivery was unavailable; share the link instead."
+        : "Invitation email sent.",
+    };
   });
 
 export const acceptInvite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: { token: string }) => input)
   .handler(async ({ data, context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-
-    const { data: invite } = await supabaseAdmin
-      .from("invites")
-      .select("id, org_id, email, role, accepted_at")
-      .eq("token", data.token)
-      .maybeSingle();
-
-    if (!invite) return { ok: false as const, message: "This invite link is not valid." };
-    if (invite.accepted_at) return { ok: false as const, message: "This invite was already used." };
-
-    const inviteEmail = invite.email.toLowerCase();
-    const userEmail = String(context.claims["email"] ?? "").toLowerCase();
-    if (userEmail && inviteEmail !== userEmail) {
-      return {
-        ok: false as const,
-        message: `This invite was sent to ${invite.email}. Sign in with that address to accept it.`,
-      };
-    }
-
-    const { error } = await supabaseAdmin
-      .from("org_members")
-      .upsert(
-        { org_id: invite.org_id, user_id: context.userId, role: invite.role },
-        { onConflict: "org_id,user_id" },
-      );
+    const { data: result, error } = await context.supabase.rpc("accept_org_invite", {
+      _token: data.token,
+    });
     if (error) return { ok: false as const, message: error.message };
-
-    await supabaseAdmin
-      .from("invites")
-      .update({ accepted_at: new Date().toISOString() })
-      .eq("id", invite.id);
-
-    const { data: org } = await supabaseAdmin
-      .from("organizations")
-      .select("name")
-      .eq("id", invite.org_id)
-      .maybeSingle();
-
-    return { ok: true as const, orgId: invite.org_id, orgName: org?.name ?? "the workspace" };
+    return result as
+      | { ok: true; orgId: string; orgName: string; alreadyAccepted: boolean }
+      | { ok: false; message: string };
   });

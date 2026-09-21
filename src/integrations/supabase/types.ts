@@ -62,6 +62,7 @@ export type Database = {
       invites: {
         Row: {
           accepted_at: string | null
+          accepted_by: string | null
           created_at: string
           created_by: string | null
           email: string
@@ -72,6 +73,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
           created_by?: string | null
           email: string
@@ -82,6 +84,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          accepted_by?: string | null
           created_at?: string
           created_by?: string | null
           email?: string
@@ -91,6 +94,13 @@ export type Database = {
           token?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invites_accepted_by_fkey"
+            columns: ["accepted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invites_org_id_fkey"
             columns: ["org_id"]
@@ -554,6 +564,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_org_invite: { Args: { _token: string }; Returns: Json }
       has_org_role: {
         Args: {
           _org: string

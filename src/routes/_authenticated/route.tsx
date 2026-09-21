@@ -16,6 +16,10 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: async () => {
     const { data, error } = await supabase.auth.getSession();
     if (error || !data.session?.user) throw redirect({ to: "/auth" });
+    const pendingInvite = window.localStorage.getItem("relaystack-pending-invite");
+    if (pendingInvite) {
+      throw redirect({ to: "/invite/$token", params: { token: pendingInvite } });
+    }
     return { user: data.session.user };
   },
   component: AuthenticatedLayout,
