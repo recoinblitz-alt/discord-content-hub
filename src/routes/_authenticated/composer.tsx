@@ -17,6 +17,11 @@ import { AppShell } from "@/components/app-shell";
 import { ChannelPicker } from "@/components/channel-picker";
 import { DiscordPreview } from "@/components/discord-preview";
 import { StatusBadge } from "@/components/status-badge";
+import {
+  TemplateDialog,
+  templateDraftFrom,
+  type TemplateDraft,
+} from "@/components/template-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
