@@ -223,9 +223,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const data = dataQuery.data ?? emptyOrgData;
 
+  const eventsQuery = useQuery({
+    queryKey: ["org-events", orgId],
+    enabled: Boolean(orgId),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<OrgEvent[]> => {
+      const { data: rows, error } = await supabase
+        .from("org_events")
+        .select("*")
+        .eq("org_id", orgId!)
+        .order("starts_at");
+      if (error) throw error;
+      return (rows ?? []).map((row) => mapEvent(row as never));
+    },
+  });
+
+  const events = eventsQuery.data ?? [];
+
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["org-data"] });
     await queryClient.invalidateQueries({ queryKey: ["memberships"] });
+  }, [queryClient]);
+
+  const refreshEvents = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["org-events"] });
   }, [queryClient]);
 
   const logAudit = useCallback(
