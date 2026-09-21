@@ -138,15 +138,44 @@ function Media() {
 
         <div className="rounded-xl border border-border bg-surface p-4 lg:sticky lg:top-28 lg:self-start">
           <h2 className="text-sm font-semibold">Add asset</h2>
+
+          <div className="mt-3 flex items-center gap-1 rounded-lg border border-border p-0.5">
+            {(
+              [
+                ["upload", "Upload from computer", Upload],
+                ["link", "Paste a link", Link2],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                  mode === value ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-3 space-y-3">
             <div>
-              <Label className="mb-1.5 block text-xs">Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Label className="mb-1.5 block text-xs">
+                Name {mode === "upload" && <span className="text-muted-foreground">(optional)</span>}
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={mode === "upload" ? "Defaults to the file name" : ""}
+              />
             </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">Image URL</Label>
-              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" />
-            </div>
+            {mode === "link" && (
+              <div>
+                <Label className="mb-1.5 block text-xs">Image URL</Label>
+                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" />
+              </div>
+            )}
             <div>
               <Label className="mb-1.5 block text-xs">Kind</Label>
               <select
