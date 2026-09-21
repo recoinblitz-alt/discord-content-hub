@@ -113,7 +113,13 @@ interface StoreValue {
   comment: (postId: string, note: string) => Promise<void>;
   publishNow: (postId: string) => Promise<{ ok: boolean; message: string }>;
   toggleChannelApproval: (channelId: string) => Promise<void>;
-  addMedia: (asset: { name: string; url: string; kind: MediaAssetKind }) => Promise<void>;
+  addMedia: (asset: {
+    name: string;
+    url: string;
+    kind: MediaAssetKind;
+    storagePath?: string;
+  }) => Promise<void>;
+  uploadMedia: (file: File) => Promise<{ url: string; storagePath: string }>;
   removeMedia: (id: string) => Promise<void>;
   saveTemplate: (template: Omit<Template, "id" | "orgId" | "uses">) => Promise<void>;
   removeTemplate: (id: string) => Promise<void>;
@@ -423,17 +429,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         await refresh();
       },
-      addMedia: async (asset) => {
+      addMedia: async ({ storagePath, ...asset }) => {
         if (!orgId || !user) return;
-        const { error } = await supabase
-          .from("media_assets")
-          .insert({ ...asset, org_id: orgId, created_by: user.id });
+        const { error } = await supabase.from("media_assets").insert({
+          ...asset,
+          storage_path: storagePath ?? null,
+          org_id: orgId,
+          created_by: user.id,
+        });
         if (error) throw error;
         await refresh();
       },
+      uploadMedia: async (file) => {
+        if (!orgId) throw new Error("No workspace");
+        const ext = (file.name.split(".").pop() ?? "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const storagePath = `${orgId}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage
+          .from("media")
+          .upload(storagePath, file, { contentType: file.type, upsert: false });
+        if (error) throw error;
+        return {
+          storagePath,
+          url: `${window.location.origin}/api/public/media/${storagePath}`,
+        };
+      },
       removeMedia: async (id) => {
+        const asset = data.media.find((m) => m.id === id);
         const { error } = await supabase.from("media_assets").delete().eq("id", id);
         if (error) throw error;
+        if (asset?.storagePath) {
+          await supabase.storage.from("media").remove([asset.storagePath]);
+        }
         await refresh();
       },
       saveTemplate: async (template) => {
