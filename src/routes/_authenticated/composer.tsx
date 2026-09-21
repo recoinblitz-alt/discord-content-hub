@@ -180,7 +180,10 @@ function Composer() {
 
   const submit = () =>
     run(async () => {
-      const merged = await persist({ status: "pending" });
+      const merged = await persist({
+        status: "pending",
+        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
+      });
       await transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
       toast.success(
         needsApproval
