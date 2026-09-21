@@ -31,7 +31,7 @@ services:
     name: relaystack-publish-due
     runtime: node
     schedule: "* * * * *"
-    buildCommand: ""
+    buildCommand: echo "No build required"
     startCommand: node -e 'fetch(process.env.APP_URL+"/api/public/publish-due",{method:"POST",headers:{authorization:"Bearer "+process.env.PUBLISH_CRON_SECRET}}).then(async r=>{if(!r.ok)throw new Error(await r.text());console.log(await r.text())})'
     envVars:
       - key: APP_URL

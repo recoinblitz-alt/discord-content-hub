@@ -89,11 +89,15 @@ function History() {
             const post = orgPosts.find((p) => p.id === a.postId);
             return (
               <li key={a.id} className="flex gap-3 px-4 py-3.5">
-                <img
-                  src={memberOf(a.actorId)?.avatar}
-                  alt=""
-                  className="mt-0.5 h-8 w-8 rounded-full bg-muted"
-                />
+                {memberOf(a.actorId)?.avatar ? (
+                  <img
+                    src={memberOf(a.actorId)?.avatar}
+                    alt=""
+                    className="mt-0.5 h-8 w-8 rounded-full bg-muted"
+                  />
+                ) : (
+                  <div className="mt-0.5 h-8 w-8 rounded-full bg-muted" />
+                )}
                 <div className="min-w-0 flex-1">
                   <p className="text-sm">
                     <span className="font-medium">{memberOf(a.actorId)?.name}</span>{" "}

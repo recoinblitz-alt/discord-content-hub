@@ -163,11 +163,15 @@ function Approvals() {
                   .reverse()
                   .map((h) => (
                     <li key={h.id} className="flex gap-3 px-4 py-3">
-                      <img
-                        src={memberOf(h.actorId)?.avatar}
-                        alt=""
-                        className="mt-0.5 h-7 w-7 rounded-full bg-muted"
-                      />
+                      {memberOf(h.actorId)?.avatar ? (
+                        <img
+                          src={memberOf(h.actorId)?.avatar}
+                          alt=""
+                          className="mt-0.5 h-7 w-7 rounded-full bg-muted"
+                        />
+                      ) : (
+                        <div className="mt-0.5 h-7 w-7 rounded-full bg-muted" />
+                      )}
                       <div className="min-w-0 flex-1 text-sm">
                         <span className="font-medium">{memberOf(h.actorId)?.name}</span>{" "}
                         <span className="capitalize text-muted-foreground">

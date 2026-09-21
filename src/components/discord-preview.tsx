@@ -69,11 +69,15 @@ export function DiscordPreview({
       )}
 
       <div className="flex gap-4 px-4 py-4">
-        <img
-          src={botAvatar}
-          alt=""
-          className="h-10 w-10 shrink-0 rounded-full bg-dc-embed object-cover"
-        />
+        {botAvatar ? (
+          <img
+            src={botAvatar}
+            alt=""
+            className="h-10 w-10 shrink-0 rounded-full bg-dc-embed object-cover"
+          />
+        ) : (
+          <div className="h-10 w-10 shrink-0 rounded-full bg-dc-embed" />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[0.95rem] font-medium text-dc-text">{botName}</span>

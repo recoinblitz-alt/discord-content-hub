@@ -129,6 +129,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
                 <Link
                   key={item.to}
                   to={item.to}
+                  preload="intent"
                   className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition ${
                     active
                       ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"

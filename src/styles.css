@@ -190,8 +190,16 @@
   animation: page-enter 140ms ease-out;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 140ms;
+  animation-timing-function: ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .page-enter {
+  .page-enter,
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
     animation: none;
   }
 }

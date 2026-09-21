@@ -152,6 +152,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const membershipQuery = useQuery({
     queryKey: ["memberships", user?.id],
     enabled: Boolean(user?.id),
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("org_members")
@@ -180,6 +182,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const dataQuery = useQuery({
     queryKey: ["org-data", orgId],
     enabled: Boolean(orgId),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<OrgData> => {
       const id = orgId!;
       const [members, servers, channels, posts, audit, templates, media] = await Promise.all([
