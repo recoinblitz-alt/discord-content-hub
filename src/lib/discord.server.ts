@@ -452,9 +452,9 @@ export async function deliverPost(postId: string) {
       post_id: postId,
       org_id: post.org_id,
       action: "published",
-      note: `Delivered to #${channel.name} (message ${messageId})`,
+      note: `Delivered to #${channel.name} (message ${messageId})${skipNote}`,
     });
-    return { ok: true, message: `Delivered to #${channel.name}` };
+    return { ok: true, message: `Delivered to #${channel.name}${skipNote}` };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Discord rejected the message";
     await supabaseAdmin
