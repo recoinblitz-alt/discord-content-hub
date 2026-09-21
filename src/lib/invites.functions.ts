@@ -74,37 +74,41 @@ export const createInvite = createServerFn({ method: "POST" })
 
     const origin = new URL(data.origin).origin;
     const inviteUrl = `${origin}/invite/${row.token}?invited=1`;
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error: accountInviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: inviteUrl,
-      data: { invited_org_id: data.orgId, invited_role: data.role },
-    });
 
-    let emailError = accountInviteError;
-    if (accountInviteError) {
-      const authClient = publicAuthClient();
-      if (authClient) {
-        const fallback = await authClient.auth.signInWithOtp({
-          email,
-          options: { emailRedirectTo: inviteUrl, shouldCreateUser: false },
-        });
-        emailError = fallback.error;
-      }
-    }
+    const { data: org } = await context.supabase
+      .from("organizations")
+      .select("name")
+      .eq("id", data.orgId)
+      .maybeSingle();
+    const { data: inviter } = await context.supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    const { sendInviteEmail } = await import("@/lib/resend.server");
+    const delivery = await sendInviteEmail({
+      to: email,
+      organizationName: org?.name ?? "your workspace",
+      role: data.role,
+      inviteUrl,
+      invitedBy: inviter?.display_name ?? null,
+    });
 
     return {
       ok: true as const,
       token: row.token,
       email,
-      emailSent: !emailError,
+      emailSent: delivery.sent,
       reused: Boolean(pendingInvite),
-      message: emailError
-        ? "The invite link is ready, but email delivery failed. Copy and share the link below."
-        : pendingInvite
+      message: delivery.sent
+        ? pendingInvite
           ? "The existing invitation was updated and emailed again."
-          : "Invitation email sent.",
+          : "Invitation email sent."
+        : `${delivery.message ?? "Email delivery failed."} Copy and share the link below.`,
     };
   });
+
 
 export const inspectInvite = createServerFn({ method: "GET" })
   .inputValidator((input: { token: string }) => input)
