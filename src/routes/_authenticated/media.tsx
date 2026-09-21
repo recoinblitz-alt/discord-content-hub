@@ -192,12 +192,56 @@ function Media() {
               <Label className="mb-1.5 block text-xs">Tags (comma separated)</Label>
               <Input value={tags} onChange={(e) => setTags(e.target.value)} />
             </div>
-            {url && (
+            {mode === "link" && url && (
               <img src={url} alt="" className="h-28 w-full rounded-lg border border-border object-cover" />
             )}
-            <Button className="w-full" onClick={submit}>
-              <Plus className="h-4 w-4" /> Add to library
-            </Button>
+
+            {mode === "upload" ? (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={ACCEPTED.join(",")}
+                  multiple
+                  hidden
+                  onChange={(e) => void handleFiles(Array.from(e.target.files ?? []))}
+                />
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileInput.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    void handleFiles(Array.from(e.dataTransfer.files));
+                  }}
+                  className={`flex w-full flex-col items-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-8 text-center transition ${
+                    dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/60"
+                  } ${uploading ? "opacity-70" : ""}`}
+                >
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {uploading ? "Uploading…" : "Click or drop images here"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    PNG, JPG, GIF or WebP · up to 10 MB each
+                  </span>
+                </button>
+              </>
+            ) : (
+              <Button className="w-full" onClick={submit}>
+                <Plus className="h-4 w-4" /> Add to library
+              </Button>
+            )}
           </div>
         </div>
       </div>
