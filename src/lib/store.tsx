@@ -77,6 +77,16 @@ interface StoreValue {
   orgMembers: Member[];
   orgTemplates: Template[];
   orgMedia: MediaAsset[];
+  state: {
+    organizations: Organization[];
+    members: Member[];
+    servers: DiscordServer[];
+    channels: Channel[];
+    posts: Post[];
+    templates: Template[];
+    media: MediaAsset[];
+    audit: AuditEntry[];
+  };
   setOrg: (id: string) => void;
   refresh: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -257,6 +267,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orgMembers: data.members,
       orgTemplates: data.templates,
       orgMedia: data.media,
+      state: {
+        organizations: memberships.map((m) => m.org),
+        members: data.members,
+        servers: data.servers,
+        channels: data.channels,
+        posts: data.posts,
+        templates: data.templates,
+        media: data.media,
+        audit: data.audit,
+      },
       setOrg: (id) => {
         setOrgId(id);
         try {
