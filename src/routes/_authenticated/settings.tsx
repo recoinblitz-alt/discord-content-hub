@@ -242,6 +242,8 @@ function Settings() {
               </ul>
             </div>
           )}
+
+          <MembersExport />
         </div>
 
         <div className="space-y-4">
