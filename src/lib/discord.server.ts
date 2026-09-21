@@ -102,7 +102,7 @@ const BUTTON_STYLE: Record<string, number> = {
   link: 5,
 };
 
-interface PostLike {
+export interface PostLike {
   content: string;
   use_embed: boolean;
   embed: Record<string, unknown> | null;
