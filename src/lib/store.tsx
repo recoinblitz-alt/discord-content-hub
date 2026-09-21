@@ -463,11 +463,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         await supabase.from("templates").update({ uses: template.uses + 1 }).eq("id", id);
         await refresh();
       },
+      saveEvent: async (event) => {
+        if (!orgId || !user) throw new Error("No workspace");
+        const row = {
+          org_id: orgId,
+          title: event.title,
+          description: event.description,
+          starts_at: event.startsAt,
+          ends_at: event.endsAt,
+          timezone: event.timezone,
+          color: event.color,
+          updated_at: new Date().toISOString(),
+        };
+        const { error } = event.id
+          ? await supabase.from("org_events").update(row).eq("id", event.id)
+          : await supabase.from("org_events").insert({ ...row, created_by: user.id });
+        if (error) throw error;
+        await refreshEvents();
+      },
+      removeEvent: async (id) => {
+        const { error } = await supabase.from("org_events").delete().eq("id", id);
+        if (error) throw error;
+        await refreshEvents();
+      },
     };
   }, [
     authReady,
     data,
     dataQuery.isLoading,
+    events,
     logAudit,
     membershipQuery.isLoading,
     memberships,
@@ -475,6 +499,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     orgId,
     queryClient,
     refresh,
+    refreshEvents,
     user,
   ]);
 
