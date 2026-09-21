@@ -36,11 +36,22 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
+  const goAfterAuth = () => {
+    const pending = localStorage.getItem("relaystack-pending-invite");
+    if (pending) {
+      navigate({ to: "/invite/$token", params: { token: pending }, replace: true });
+      return;
+    }
+    navigate({ to: "/dashboard", replace: true });
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) goAfterAuth();
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate]);
+
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
