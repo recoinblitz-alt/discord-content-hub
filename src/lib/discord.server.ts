@@ -210,8 +210,8 @@ export interface OutgoingFile {
   blob: Blob;
 }
 
-/** Discord's per-file limit for servers without boosts. */
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+/** Discord's per-message file limit for servers without boosts (10 MiB). */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 /**
  * Posts a message with real file uploads (multipart/form-data), so images appear
@@ -258,7 +258,8 @@ export async function sendDiscordMessageWithFiles(
 export async function resolveUploadFiles(orgId: string, urls: string[]) {
   const files: OutgoingFile[] = [];
   const leftovers: string[] = [];
-  if (!urls.length) return { files, leftovers };
+  const skipped: { url: string; reason: string }[] = [];
+  if (!urls.length) return { files, leftovers, skipped };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: assets } = await supabaseAdmin
@@ -267,17 +268,30 @@ export async function resolveUploadFiles(orgId: string, urls: string[]) {
     .eq("org_id", orgId)
     .in("url", urls);
 
+  const fallback = (url: string, reason: string) => {
+    leftovers.push(url);
+    skipped.push({ url, reason });
+  };
+
   for (const url of urls) {
     const asset = assets?.find((a) => a.url === url);
     if (!asset?.storage_path) {
-      leftovers.push(url);
+      fallback(url, "added as a link, not an uploaded file");
+      continue;
+    }
+    if (files.length >= 10) {
+      fallback(url, "more than 10 pictures in one message");
       continue;
     }
     const { data: blob, error } = await supabaseAdmin.storage
       .from("media")
       .download(asset.storage_path);
-    if (error || !blob || blob.size > MAX_UPLOAD_BYTES || files.length >= 10) {
-      leftovers.push(url);
+    if (error || !blob) {
+      fallback(url, "the stored file could not be read");
+      continue;
+    }
+    if (blob.size > MAX_UPLOAD_BYTES) {
+      fallback(url, "over Discord's 10 MB limit");
       continue;
     }
     const ext = asset.storage_path.split(".").pop() ?? "png";
