@@ -12,6 +12,7 @@ interface PreviewProps {
   embed: DiscordEmbed;
   buttons?: EmbedButton[] | undefined;
   attachments?: string[] | undefined;
+  mediaMode?: "upload" | "embed" | undefined;
   timestamp?: string | null | undefined;
   className?: string | undefined;
 }
@@ -42,6 +43,7 @@ export function DiscordPreview({
   embed,
   buttons = [],
   attachments = [],
+  mediaMode = "embed",
   timestamp,
   className,
 }: PreviewProps) {
@@ -190,13 +192,25 @@ export function DiscordPreview({
             </div>
           )}
 
-          {attachments.length > 0 && (
-            <div className="mt-2 flex max-w-[520px] flex-wrap gap-2">
-              {attachments.map((a) => (
-                <img key={a} src={a} alt="" className="h-28 rounded-lg object-cover" />
-              ))}
-            </div>
-          )}
+          {attachments.length > 0 &&
+            (mediaMode === "upload" ? (
+              <div className="mt-2 space-y-2">
+                {attachments.map((a) => (
+                  <img
+                    key={a}
+                    src={a}
+                    alt=""
+                    className="max-h-[400px] max-w-[350px] rounded-lg object-contain"
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="mt-2 flex max-w-[520px] flex-wrap gap-2">
+                {attachments.map((a) => (
+                  <img key={a} src={a} alt="" className="h-28 rounded-lg object-cover" />
+                ))}
+              </div>
+            ))}
 
           {buttons.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
