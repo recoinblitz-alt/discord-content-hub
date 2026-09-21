@@ -444,7 +444,7 @@ export async function deliverPost(postId: string) {
         status: "published",
         published_at: now,
         discord_message_id: messageId,
-        failure_reason: `Delivered to #${channel.name}`,
+        failure_reason: `Delivered to #${channel.name}${skipNote}`,
         updated_at: now,
       })
       .eq("id", postId);
