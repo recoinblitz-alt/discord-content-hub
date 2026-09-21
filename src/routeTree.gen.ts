@@ -9,112 +9,112 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApprovalsRouteImport } from './routes/approvals'
-import { Route as CalendarRouteImport } from './routes/calendar'
-import { Route as ComposerRouteImport } from './routes/composer'
-import { Route as HistoryRouteImport } from './routes/history'
-import { Route as MediaRouteImport } from './routes/media'
-import { Route as PostsRouteImport } from './routes/posts'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as TeamRouteImport } from './routes/team'
-import { Route as TemplatesRouteImport } from './routes/templates'
+import { Route as AuthenticatedApprovalsRouteImport } from './routes/_authenticated/approvals'
+import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
+import { Route as AuthenticatedComposerRouteImport } from './routes/_authenticated/composer'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedMediaRouteImport } from './routes/_authenticated/media'
+import { Route as AuthenticatedPostsRouteImport } from './routes/_authenticated/posts'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedTeamRouteImport } from './routes/_authenticated/team'
+import { Route as AuthenticatedTemplatesRouteImport } from './routes/_authenticated/templates'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApprovalsRoute = ApprovalsRouteImport.update({
-  id: '/approvals',
+const AuthenticatedApprovalsRoute = AuthenticatedApprovalsRouteImport.update({
+  id: '/_authenticated/approvals',
   path: '/approvals',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CalendarRoute = CalendarRouteImport.update({
-  id: '/calendar',
+const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
+  id: '/_authenticated/calendar',
   path: '/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ComposerRoute = ComposerRouteImport.update({
-  id: '/composer',
+const AuthenticatedComposerRoute = AuthenticatedComposerRouteImport.update({
+  id: '/_authenticated/composer',
   path: '/composer',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HistoryRoute = HistoryRouteImport.update({
-  id: '/history',
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/_authenticated/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/_authenticated/history',
   path: '/history',
   getParentRoute: () => rootRouteImport,
 } as any)
-const MediaRoute = MediaRouteImport.update({
-  id: '/media',
+const AuthenticatedMediaRoute = AuthenticatedMediaRouteImport.update({
+  id: '/_authenticated/media',
   path: '/media',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PostsRoute = PostsRouteImport.update({
-  id: '/posts',
+const AuthenticatedPostsRoute = AuthenticatedPostsRouteImport.update({
+  id: '/_authenticated/posts',
   path: '/posts',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/_authenticated/settings',
   path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TeamRoute = TeamRouteImport.update({
-  id: '/team',
+const AuthenticatedTeamRoute = AuthenticatedTeamRouteImport.update({
+  id: '/_authenticated/team',
   path: '/team',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TemplatesRoute = TemplatesRouteImport.update({
-  id: '/templates',
+const AuthenticatedTemplatesRoute = AuthenticatedTemplatesRouteImport.update({
+  id: '/_authenticated/templates',
   path: '/templates',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/approvals': typeof ApprovalsRoute
-  '/calendar': typeof CalendarRoute
-  '/composer': typeof ComposerRoute
-  '/history': typeof HistoryRoute
-  '/media': typeof MediaRoute
-  '/posts': typeof PostsRoute
-  '/settings': typeof SettingsRoute
-  '/team': typeof TeamRoute
-  '/templates': typeof TemplatesRoute
+  '/approvals': typeof AuthenticatedApprovalsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
+  '/composer': typeof AuthenticatedComposerRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/media': typeof AuthenticatedMediaRoute
+  '/posts': typeof AuthenticatedPostsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/approvals': typeof ApprovalsRoute
-  '/calendar': typeof CalendarRoute
-  '/composer': typeof ComposerRoute
-  '/history': typeof HistoryRoute
-  '/media': typeof MediaRoute
-  '/posts': typeof PostsRoute
-  '/settings': typeof SettingsRoute
-  '/team': typeof TeamRoute
-  '/templates': typeof TemplatesRoute
+  '/approvals': typeof AuthenticatedApprovalsRoute
+  '/calendar': typeof AuthenticatedCalendarRoute
+  '/composer': typeof AuthenticatedComposerRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/media': typeof AuthenticatedMediaRoute
+  '/posts': typeof AuthenticatedPostsRoute
+  '/settings': typeof AuthenticatedSettingsRoute
+  '/team': typeof AuthenticatedTeamRoute
+  '/templates': typeof AuthenticatedTemplatesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/approvals': typeof ApprovalsRoute
-  '/calendar': typeof CalendarRoute
-  '/composer': typeof ComposerRoute
-  '/history': typeof HistoryRoute
-  '/media': typeof MediaRoute
-  '/posts': typeof PostsRoute
-  '/settings': typeof SettingsRoute
-  '/team': typeof TeamRoute
-  '/templates': typeof TemplatesRoute
+  '/_authenticated/approvals': typeof AuthenticatedApprovalsRoute
+  '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
+  '/_authenticated/composer': typeof AuthenticatedComposerRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/media': typeof AuthenticatedMediaRoute
+  '/_authenticated/posts': typeof AuthenticatedPostsRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/team': typeof AuthenticatedTeamRoute
+  '/_authenticated/templates': typeof AuthenticatedTemplatesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
     | '/approvals'
     | '/calendar'
     | '/composer'
+    | '/dashboard'
     | '/history'
     | '/media'
     | '/posts'
@@ -123,10 +123,10 @@ export interface FileRouteTypes {
     | '/templates'
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
     | '/approvals'
     | '/calendar'
     | '/composer'
+    | '/dashboard'
     | '/history'
     | '/media'
     | '/posts'
@@ -135,117 +135,117 @@ export interface FileRouteTypes {
     | '/templates'
   id:
     | '__root__'
-    | '/'
-    | '/approvals'
-    | '/calendar'
-    | '/composer'
-    | '/history'
-    | '/media'
-    | '/posts'
-    | '/settings'
-    | '/team'
-    | '/templates'
+    | '/_authenticated/approvals'
+    | '/_authenticated/calendar'
+    | '/_authenticated/composer'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/history'
+    | '/_authenticated/media'
+    | '/_authenticated/posts'
+    | '/_authenticated/settings'
+    | '/_authenticated/team'
+    | '/_authenticated/templates'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ApprovalsRoute: typeof ApprovalsRoute
-  CalendarRoute: typeof CalendarRoute
-  ComposerRoute: typeof ComposerRoute
-  HistoryRoute: typeof HistoryRoute
-  MediaRoute: typeof MediaRoute
-  PostsRoute: typeof PostsRoute
-  SettingsRoute: typeof SettingsRoute
-  TeamRoute: typeof TeamRoute
-  TemplatesRoute: typeof TemplatesRoute
+  AuthenticatedApprovalsRoute: typeof AuthenticatedApprovalsRoute
+  AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
+  AuthenticatedComposerRoute: typeof AuthenticatedComposerRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedMediaRoute: typeof AuthenticatedMediaRoute
+  AuthenticatedPostsRoute: typeof AuthenticatedPostsRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedTeamRoute: typeof AuthenticatedTeamRoute
+  AuthenticatedTemplatesRoute: typeof AuthenticatedTemplatesRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/approvals': {
-      id: '/approvals'
+    '/_authenticated/approvals': {
+      id: '/_authenticated/approvals'
       path: '/approvals'
       fullPath: '/approvals'
-      preLoaderRoute: typeof ApprovalsRouteImport
+      preLoaderRoute: typeof AuthenticatedApprovalsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/calendar': {
-      id: '/calendar'
+    '/_authenticated/calendar': {
+      id: '/_authenticated/calendar'
       path: '/calendar'
       fullPath: '/calendar'
-      preLoaderRoute: typeof CalendarRouteImport
+      preLoaderRoute: typeof AuthenticatedCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/composer': {
-      id: '/composer'
+    '/_authenticated/composer': {
+      id: '/_authenticated/composer'
       path: '/composer'
       fullPath: '/composer'
-      preLoaderRoute: typeof ComposerRouteImport
+      preLoaderRoute: typeof AuthenticatedComposerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/history': {
-      id: '/history'
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
       path: '/history'
       fullPath: '/history'
-      preLoaderRoute: typeof HistoryRouteImport
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/media': {
-      id: '/media'
+    '/_authenticated/media': {
+      id: '/_authenticated/media'
       path: '/media'
       fullPath: '/media'
-      preLoaderRoute: typeof MediaRouteImport
+      preLoaderRoute: typeof AuthenticatedMediaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/posts': {
-      id: '/posts'
+    '/_authenticated/posts': {
+      id: '/_authenticated/posts'
       path: '/posts'
       fullPath: '/posts'
-      preLoaderRoute: typeof PostsRouteImport
+      preLoaderRoute: typeof AuthenticatedPostsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/settings': {
-      id: '/settings'
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/team': {
-      id: '/team'
+    '/_authenticated/team': {
+      id: '/_authenticated/team'
       path: '/team'
       fullPath: '/team'
-      preLoaderRoute: typeof TeamRouteImport
+      preLoaderRoute: typeof AuthenticatedTeamRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/templates': {
-      id: '/templates'
+    '/_authenticated/templates': {
+      id: '/_authenticated/templates'
       path: '/templates'
       fullPath: '/templates'
-      preLoaderRoute: typeof TemplatesRouteImport
+      preLoaderRoute: typeof AuthenticatedTemplatesRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexRoute: IndexRoute,
-  ApprovalsRoute: ApprovalsRoute,
-  CalendarRoute: CalendarRoute,
-  ComposerRoute: ComposerRoute,
-  HistoryRoute: HistoryRoute,
-  MediaRoute: MediaRoute,
-  PostsRoute: PostsRoute,
-  SettingsRoute: SettingsRoute,
-  TeamRoute: TeamRoute,
-  TemplatesRoute: TemplatesRoute,
+  AuthenticatedApprovalsRoute: AuthenticatedApprovalsRoute,
+  AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
+  AuthenticatedComposerRoute: AuthenticatedComposerRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedMediaRoute: AuthenticatedMediaRoute,
+  AuthenticatedPostsRoute: AuthenticatedPostsRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedTeamRoute: AuthenticatedTeamRoute,
+  AuthenticatedTemplatesRoute: AuthenticatedTemplatesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
