@@ -483,6 +483,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         if (error) throw error;
         await refresh();
       },
+      updateTemplate: async (id, template) => {
+        const { error } = await supabase
+          .from("templates")
+          .update({
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            content: template.content,
+            use_embed: template.kind === "embed",
+            embed: template.embed as unknown as never,
+            buttons: template.buttons as unknown as never,
+          })
+          .eq("id", id);
+        if (error) throw error;
+        await refresh();
+      },
       removeTemplate: async (id) => {
         const { error } = await supabase.from("templates").delete().eq("id", id);
         if (error) throw error;
