@@ -239,7 +239,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     };
   }, [state, log]);
 
-  return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
+  return (
+    <StoreContext.Provider value={value}>
+      {mounted ? (
+        children
+      ) : (
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-blurple border-t-transparent" />
+        </div>
+      )}
+    </StoreContext.Provider>
+  );
 }
 
 export function useStore() {
