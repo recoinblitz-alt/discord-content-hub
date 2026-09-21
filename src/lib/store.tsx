@@ -34,6 +34,7 @@ import {
   type MediaAsset,
   type MediaAssetKind,
   type Member,
+  type OrgEvent,
   type Organization,
   type Post,
   type PostStatus,
@@ -78,6 +79,7 @@ interface StoreValue {
   orgMembers: Member[];
   orgTemplates: Template[];
   orgMedia: MediaAsset[];
+  orgEvents: OrgEvent[];
   state: {
     organizations: Organization[];
     members: Member[];
@@ -116,6 +118,10 @@ interface StoreValue {
   saveTemplate: (template: Omit<Template, "id" | "orgId" | "uses">) => Promise<void>;
   removeTemplate: (id: string) => Promise<void>;
   bumpTemplate: (id: string) => Promise<void>;
+  saveEvent: (
+    event: Omit<OrgEvent, "orgId" | "createdBy"> & { id?: string },
+  ) => Promise<void>;
+  removeEvent: (id: string) => Promise<void>;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
