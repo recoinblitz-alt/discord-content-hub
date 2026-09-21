@@ -700,7 +700,7 @@ function Composer() {
                   ))}
                 </div>
                 <p className="mt-2 text-[0.6875rem] text-muted-foreground">
-                  Up to 10 pictures per message, each under 8 MB. Pictures added as a link (not
+                  Up to 10 pictures per message, each under 10 MB. Pictures added as a link (not
                   uploaded to your library) always use the embed method.
                 </p>
               </div>
