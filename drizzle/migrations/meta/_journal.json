@@ -43,6 +43,13 @@
       "when": 1789974116169,
       "tag": "0005_post_media_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790005098629,
+      "tag": "0006_secure_roles_and_atomic_invites",
+      "breakpoints": true
     }
   ]
 }
