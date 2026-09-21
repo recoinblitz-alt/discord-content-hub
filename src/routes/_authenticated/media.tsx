@@ -13,12 +13,12 @@ import { useWorkspace } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated/media")({
   head: () => ({
     meta: [
-      { title: "Media library — Relaystack" },
+      { title: "Media library — MUNO" },
       {
         name: "description",
         content: "Store, preview and reuse banners, thumbnails and brand marks across Discord posts.",
       },
-      { property: "og:title", content: "Media library — Relaystack" },
+      { property: "og:title", content: "Media library — MUNO" },
       {
         property: "og:description",
         content: "Reusable banners and graphics for Discord announcements.",

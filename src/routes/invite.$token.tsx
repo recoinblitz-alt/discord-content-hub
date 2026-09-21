@@ -9,10 +9,10 @@ export const Route = createFileRoute("/invite/$token")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Join a workspace — Relaystack" },
-      { name: "description", content: "Accept your Relaystack workspace invitation." },
-      { property: "og:title", content: "Join a workspace — Relaystack" },
-      { property: "og:description", content: "Accept your Relaystack workspace invitation." },
+      { title: "Join a workspace — MUNO" },
+      { name: "description", content: "Accept your MUNO workspace invitation." },
+      { property: "og:title", content: "Join a workspace — MUNO" },
+      { property: "og:description", content: "Accept your MUNO workspace invitation." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

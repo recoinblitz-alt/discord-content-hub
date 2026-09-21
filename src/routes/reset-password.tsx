@@ -11,9 +11,9 @@ export const Route = createFileRoute("/reset-password")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Set a new password — Relaystack" },
-      { name: "description", content: "Choose a new password for your Relaystack account." },
-      { property: "og:title", content: "Set a new password — Relaystack" },
+      { title: "Set a new password — MUNO" },
+      { name: "description", content: "Choose a new password for your MUNO account." },
+      { property: "og:title", content: "Set a new password — MUNO" },
       { property: "og:description", content: "Choose a new password for your account." },
     ],
   }),

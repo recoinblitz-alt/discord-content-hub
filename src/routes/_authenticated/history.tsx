@@ -10,13 +10,13 @@ import type { AuditAction } from "@/lib/types";
 export const Route = createFileRoute("/_authenticated/history")({
   head: () => ({
     meta: [
-      { title: "Audit trail — Relaystack" },
+      { title: "Audit trail — MUNO" },
       {
         name: "description",
         content:
           "Full history of Discord post creation, revisions, approval decisions and simulated delivery results.",
       },
-      { property: "og:title", content: "Audit trail — Relaystack" },
+      { property: "og:title", content: "Audit trail — MUNO" },
       {
         property: "og:description",
         content: "Every creation, revision, approval and delivery event on your Discord posts.",

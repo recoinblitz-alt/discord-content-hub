@@ -5,13 +5,13 @@ import { CONTACT_EMAIL, LegalPage, Section } from "@/components/legal-page";
 export const Route = createFileRoute("/cookies")({
   head: () => ({
     meta: [
-      { title: "Cookie notice — Relaystack" },
+      { title: "Cookie notice — MUNO" },
       {
         name: "description",
         content:
-          "Relaystack uses only the storage needed to keep you signed in and remember your theme.",
+          "MUNO uses only the storage needed to keep you signed in and remember your theme.",
       },
-      { property: "og:title", content: "Cookie notice — Relaystack" },
+      { property: "og:title", content: "Cookie notice — MUNO" },
       {
         property: "og:description",
         content: "No advertising or tracking cookies — only the sign-in session and theme.",

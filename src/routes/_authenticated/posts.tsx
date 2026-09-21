@@ -14,12 +14,12 @@ import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 export const Route = createFileRoute("/_authenticated/posts")({
   head: () => ({
     meta: [
-      { title: "All posts — Relaystack" },
+      { title: "All posts — MUNO" },
       {
         name: "description",
         content: "Every Discord draft, submission, scheduled and published post in one filterable list.",
       },
-      { property: "og:title", content: "All posts — Relaystack" },
+      { property: "og:title", content: "All posts — MUNO" },
       {
         property: "og:description",
         content: "Filter Discord posts by server, channel and lifecycle status.",

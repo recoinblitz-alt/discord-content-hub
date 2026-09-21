@@ -5,16 +5,16 @@ import { CONTACT_EMAIL, COMPANY_NAME, LegalPage, Section } from "@/components/le
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Relaystack" },
+      { title: "Privacy Policy — MUNO" },
       {
         name: "description",
         content:
-          "What Relaystack stores, why, who processes it, how long it is kept, and how to request deletion.",
+          "What MUNO stores, why, who processes it, how long it is kept, and how to request deletion.",
       },
-      { property: "og:title", content: "Privacy Policy — Relaystack" },
+      { property: "og:title", content: "Privacy Policy — MUNO" },
       {
         property: "og:description",
-        content: "How Relaystack handles account data, posts, uploaded images and bot tokens.",
+        content: "How MUNO handles account data, posts, uploaded images and bot tokens.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

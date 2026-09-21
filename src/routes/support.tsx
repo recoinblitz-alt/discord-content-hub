@@ -5,16 +5,16 @@ import { CONTACT_EMAIL, COMPANY_NAME, LegalPage, Section } from "@/components/le
 export const Route = createFileRoute("/support")({
   head: () => ({
     meta: [
-      { title: "Support — Relaystack" },
+      { title: "Support — MUNO" },
       {
         name: "description",
         content:
-          "Get help with bot connection, approvals, scheduled delivery and member exports in Relaystack.",
+          "Get help with bot connection, approvals, scheduled delivery and member exports in MUNO.",
       },
-      { property: "og:title", content: "Support — Relaystack" },
+      { property: "og:title", content: "Support — MUNO" },
       {
         property: "og:description",
-        content: "Contact details and answers to common Relaystack questions.",
+        content: "Contact details and answers to common MUNO questions.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -52,13 +52,13 @@ export const Route = createFileRoute("/_authenticated/composer")({
   },
   head: () => ({
     meta: [
-      { title: "Post Creator — Relaystack" },
+      { title: "Post Creator — MUNO" },
       {
         name: "description",
         content:
           "Build Discord messages and rich embeds with a pixel-accurate live preview, buttons and scheduling.",
       },
-      { property: "og:title", content: "Post Creator — Relaystack" },
+      { property: "og:title", content: "Post Creator — MUNO" },
       {
         property: "og:description",
         content: "Build Discord embeds with a live preview, buttons, media and scheduling.",
@@ -806,7 +806,7 @@ function Composer() {
               </span>
             </div>
             <DiscordPreview
-              botName={server?.botName ?? "Relaystack Bot"}
+              botName={server?.botName ?? "MUNO Bot"}
               botAvatar={server?.botAvatar ?? ""}
               channelName={channel?.name}
               kind={post.kind}
@@ -898,7 +898,7 @@ function Composer() {
         draft={templateDraft}
         metaOnly
         title="Save as template"
-        botName={server?.botName ?? "Relaystack Bot"}
+        botName={server?.botName ?? "MUNO Bot"}
         botAvatar={server?.botAvatar ?? ""}
         onSave={saveAsTemplate}
       />
