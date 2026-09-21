@@ -454,11 +454,26 @@ export function useStore() {
   return ctx;
 }
 
-/** Store scoped to a signed-in member with an active workspace. */
+const placeholderOrg: Organization = { id: "", name: "Workspace", tag: "Workspace", plan: "Free" };
+const placeholderMember: Member = {
+  id: "",
+  orgIds: [],
+  name: "You",
+  handle: "you",
+  role: "user",
+  avatar: "",
+  email: "",
+};
+
+/**
+ * Store scoped to a signed-in member with an active workspace. While the
+ * workspace is still loading it returns safe placeholders instead of throwing.
+ */
 export function useWorkspace() {
   const store = useStore();
-  if (!store.currentOrg || !store.currentUser) {
-    throw new Error("useWorkspace requires an active workspace");
-  }
-  return store as StoreValue & { currentOrg: Organization; currentUser: Member };
+  return {
+    ...store,
+    currentOrg: store.currentOrg ?? placeholderOrg,
+    currentUser: store.currentUser ?? placeholderMember,
+  };
 }
