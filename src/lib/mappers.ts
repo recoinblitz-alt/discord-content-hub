@@ -153,13 +153,16 @@ export function mapTemplate(row: Row): Template {
 }
 
 export function mapMedia(row: Row): MediaAsset {
+  const storagePath = row["storage_path"] ? str(row["storage_path"]) : null;
   return {
     id: str(row["id"]),
     orgId: str(row["org_id"]),
     name: str(row["name"]),
-    url: str(row["url"]),
+    // Uploaded files always resolve through the public host, so assets saved with
+    // an auth-gated preview URL keep working.
+    url: storagePath ? publicMediaUrl(storagePath) : str(row["url"]),
     kind: str(row["kind"], "banner") as MediaAsset["kind"],
-    storagePath: row["storage_path"] ? str(row["storage_path"]) : null,
+    storagePath,
     tags: [],
     addedAt: str(row["created_at"]),
   };
