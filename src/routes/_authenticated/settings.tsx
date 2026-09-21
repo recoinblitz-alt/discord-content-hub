@@ -394,6 +394,7 @@ function MembersExport() {
             m.roleIds.join(" | "),
             m.roleNames.join(" | "),
           ]),
+          { textColumns: [0, 6] },
         ),
       );
       downloadCsv(
@@ -401,6 +402,7 @@ function MembersExport() {
         toCsv(
           ["role_id", "role_name", "colour", "position", "member_count"],
           result.roles.map((r) => [r.id, r.name, r.color, r.position, r.memberCount]),
+          { textColumns: [0] },
         ),
       );
       toast.success(`${result.members.length} members exported`, { id: pending });

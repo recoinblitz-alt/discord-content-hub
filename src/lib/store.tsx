@@ -123,6 +123,10 @@ interface StoreValue {
   uploadMedia: (file: File) => Promise<{ url: string; storagePath: string }>;
   removeMedia: (id: string) => Promise<void>;
   saveTemplate: (template: Omit<Template, "id" | "orgId" | "uses">) => Promise<void>;
+  updateTemplate: (
+    id: string,
+    template: Omit<Template, "id" | "orgId" | "uses">,
+  ) => Promise<void>;
   removeTemplate: (id: string) => Promise<void>;
   bumpTemplate: (id: string) => Promise<void>;
   saveEvent: (
@@ -476,6 +480,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           buttons: template.buttons as unknown as never,
           created_by: user.id,
         });
+        if (error) throw error;
+        await refresh();
+      },
+      updateTemplate: async (id, template) => {
+        const { error } = await supabase
+          .from("templates")
+          .update({
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            content: template.content,
+            use_embed: template.kind === "embed",
+            embed: template.embed as unknown as never,
+            buttons: template.buttons as unknown as never,
+          })
+          .eq("id", id);
         if (error) throw error;
         await refresh();
       },

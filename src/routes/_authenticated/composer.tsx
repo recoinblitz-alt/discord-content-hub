@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
+  BookmarkPlus,
   CalendarClock,
   Image as ImageIcon,
   Plus,
@@ -16,6 +17,11 @@ import { AppShell } from "@/components/app-shell";
 import { ChannelPicker } from "@/components/channel-picker";
 import { DiscordPreview } from "@/components/discord-preview";
 import { StatusBadge } from "@/components/status-badge";
+import {
+  TemplateDialog,
+  templateDraftFrom,
+  type TemplateDraft,
+} from "@/components/template-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,6 +90,7 @@ function Composer() {
     transition,
     publishNow,
     bumpTemplate,
+    saveTemplate,
     permissions,
     state,
   } = useWorkspace();
@@ -221,6 +228,21 @@ function Composer() {
     toast.success(`Applied “${t.name}”`);
   };
 
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const templateDraft: TemplateDraft = templateDraftFrom({
+    kind: post.kind,
+    content: post.content,
+    embed: post.embed,
+    buttons: post.buttons,
+    name: post.title === "Untitled post" ? "" : post.title,
+  });
+
+  const saveAsTemplate = async (value: TemplateDraft) => {
+    await saveTemplate(value);
+    toast.success("Saved to the template library for everyone in this workspace");
+  };
+
+
   const canEdit =
     permissions.approve ||
     permissions.configureServers ||
@@ -241,6 +263,11 @@ function Composer() {
           <Button size="sm" variant="outline" onClick={saveDraft} disabled={!canEdit}>
             <Save className="h-4 w-4" /> Save
           </Button>
+          {permissions.configureServers && (
+            <Button size="sm" variant="outline" onClick={() => setTemplateDialogOpen(true)}>
+              <BookmarkPlus className="h-4 w-4" /> Save as template
+            </Button>
+          )}
           {(post.status === "draft" || post.status === "changes_requested" || post.status === "rejected") && (
             <Button size="sm" onClick={submit} disabled={!canEdit}>
               <Send className="h-4 w-4" />
@@ -865,6 +892,16 @@ function Composer() {
           </section>
         </div>
       </div>
+      <TemplateDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        draft={templateDraft}
+        metaOnly
+        title="Save as template"
+        botName={server?.botName ?? "Relaystack Bot"}
+        botAvatar={server?.botAvatar ?? ""}
+        onSave={saveAsTemplate}
+      />
     </AppShell>
   );
 }

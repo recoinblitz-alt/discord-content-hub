@@ -5,8 +5,26 @@ function cell(value: unknown): string {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-export function toCsv(headers: string[], rows: unknown[][]): string {
-  return [headers.map(cell).join(","), ...rows.map((r) => r.map(cell).join(","))].join("\r\n");
+/**
+ * Long Discord snowflakes (18-19 digits) get mangled into scientific notation
+ * when spreadsheets treat them as numbers. Emitting them as `="123…"` forces
+ * Excel, Google Sheets and Numbers to keep every digit as text.
+ */
+function textCell(value: unknown): string {
+  const text = value === null || value === undefined ? "" : String(value);
+  if (text === "") return "";
+  return `="${text.replace(/"/g, '""')}"`;
+}
+
+export function toCsv(
+  headers: string[],
+  rows: unknown[][],
+  options?: { textColumns?: number[] },
+): string {
+  const textCols = new Set(options?.textColumns ?? []);
+  const line = (row: unknown[]) =>
+    row.map((value, i) => (textCols.has(i) ? textCell(value) : cell(value))).join(",");
+  return [headers.map(cell).join(","), ...rows.map(line)].join("\r\n");
 }
 
 export function downloadCsv(filename: string, csv: string) {
