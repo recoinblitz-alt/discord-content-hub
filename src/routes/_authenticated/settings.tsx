@@ -218,8 +218,8 @@ function Settings() {
                   const already = orgServers.some((s) => s.guildId === g.id);
                   return (
                     <li key={g.id} className="flex items-center gap-3 px-4 py-3">
-                      {g.icon ? (
-                        <img src={g.icon} alt="" className="h-8 w-8 rounded-lg" />
+                      {g.iconUrl ? (
+                        <img src={g.iconUrl} alt="" className="h-8 w-8 rounded-lg" />
                       ) : (
                         <div className="h-8 w-8 rounded-lg bg-muted" />
                       )}
