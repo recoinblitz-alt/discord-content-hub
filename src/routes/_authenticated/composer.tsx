@@ -108,6 +108,7 @@ function Composer() {
       embed: template ? structuredClone(template.embed) : emptyEmbed(),
       buttons: template ? structuredClone(template.buttons) : [],
       attachments: [],
+      mediaMode: "upload",
       status: "draft",
       scheduledAt: null,
       timezone: "UTC",
@@ -664,6 +665,45 @@ function Composer() {
           <section className={sectionClass}>
             <div className={headClass}>Media library</div>
             <div className="p-4">
+              <div className="mb-4 rounded-lg border border-border p-3">
+                <p className="text-xs font-medium">How should pictures be shared?</p>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {(
+                    [
+                      {
+                        value: "upload" as const,
+                        label: "Upload to Discord",
+                        hint: "Big native image under your text. Recommended.",
+                      },
+                      {
+                        value: "embed" as const,
+                        label: "Show inside embed card",
+                        hint: "Picture framed inside the coloured card.",
+                      },
+                    ]
+                  ).map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => set("mediaMode", option.value)}
+                      className={`rounded-lg border p-2.5 text-left transition ${
+                        post.mediaMode === option.value
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:bg-accent"
+                      }`}
+                    >
+                      <span className="block text-xs font-medium">{option.label}</span>
+                      <span className="mt-0.5 block text-[0.6875rem] text-muted-foreground">
+                        {option.hint}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-[0.6875rem] text-muted-foreground">
+                  Up to 10 pictures per message, each under 8 MB. Pictures added as a link (not
+                  uploaded to your library) always use the embed method.
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {orgMedia.map((m) => (
                   <div key={m.id} className="overflow-hidden rounded-lg border border-border">
@@ -747,6 +787,7 @@ function Composer() {
               embed={post.embed}
               buttons={post.buttons}
               attachments={post.attachments}
+              mediaMode={post.mediaMode}
               timestamp={post.scheduledAt}
             />
           </div>
