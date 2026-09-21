@@ -14,4 +14,4 @@
 - [x] Refresh the backend schema cache and make invite acceptance retry safely.
 - [x] Re-audit every role against UI, server, and database permissions.
 - [ ] Verify new/existing invite links, duplicate prevention, and all four roles end to end.
-- [ ] Verify normal users cannot access team management or other members' email and role data.
+- [x] Verify normal users cannot access team management or other members' email and role data.
