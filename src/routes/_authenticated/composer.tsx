@@ -174,13 +174,18 @@ function Composer() {
 
   const saveDraft = () =>
     run(async () => {
-      await persist();
+      await persist({
+        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
+      });
       toast.success("Draft saved");
     });
 
   const submit = () =>
     run(async () => {
-      const merged = await persist({ status: "pending" });
+      const merged = await persist({
+        status: "pending",
+        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
+      });
       await transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
       toast.success(
         needsApproval
@@ -830,16 +835,20 @@ function Composer() {
                 <div>
                   <Label className="mb-1.5 block text-xs">Date & time</Label>
                   <DateTimeField
-                    disabled={!permissions.publishDirectly}
+                    disabled={!canEdit}
                     value={scheduleAt}
                     onChange={setScheduleAt}
                   />
-
+                  {!permissions.publishDirectly && (
+                    <p className="mt-1.5 text-xs text-muted-foreground">
+                      Pick your preferred time — an admin confirms it when approving.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="mb-1.5 block text-xs">Timezone</Label>
                   <select
-                    disabled={!permissions.publishDirectly}
+                    disabled={!canEdit}
                     value={post.timezone}
                     onChange={(e) => set("timezone", e.target.value)}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
