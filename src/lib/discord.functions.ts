@@ -238,3 +238,43 @@ export const publishPost = createServerFn({ method: "POST" })
     const { deliverPost } = await import("./discord.server");
     return deliverPost(data.postId);
   });
+
+/** Super-admin-only: export every member of a connected Discord server. */
+export const exportGuildMembers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { serverId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: server } = await supabaseAdmin
+      .from("servers")
+      .select("id, org_id, name, guild_id")
+      .eq("id", data.serverId)
+      .single();
+    if (!server?.guild_id) return { ok: false as const, message: "Server is not connected" };
+    await assertRole(context as Ctx, server.org_id, ["super_admin"]);
+
+    const { data: secret } = await supabaseAdmin
+      .from("server_secrets")
+      .select("bot_token")
+      .eq("server_id", server.id)
+      .single();
+    if (!secret?.bot_token) return { ok: false as const, message: "No bot token saved" };
+
+    const { fetchGuildMembers } = await import("./discord.server");
+    try {
+      const { members, roles } = await fetchGuildMembers(secret.bot_token, server.guild_id);
+      const counts = new Map<string, number>();
+      for (const m of members) for (const id of m.roleIds) counts.set(id, (counts.get(id) ?? 0) + 1);
+      return {
+        ok: true as const,
+        serverName: server.name,
+        members,
+        roles: roles.map((r) => ({ ...r, memberCount: counts.get(r.id) ?? 0 })),
+      };
+    } catch (err) {
+      return {
+        ok: false as const,
+        message: err instanceof Error ? err.message : "Discord refused the request",
+      };
+    }
+  });
