@@ -28,12 +28,19 @@ export const Route = createFileRoute("/_authenticated/media")({
   component: Media,
 });
 
+const ACCEPTED = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const MAX_BYTES = 10 * 1024 * 1024;
+
 function Media() {
-  const { orgMedia, addMedia, removeMedia } = useWorkspace();
+  const { orgMedia, addMedia, removeMedia, uploadMedia } = useWorkspace();
+  const [mode, setMode] = useState<"upload" | "link">("upload");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [kind, setKind] = useState<"banner" | "thumbnail" | "icon">("banner");
   const [tags, setTags] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
     if (!name.trim() || !url.trim()) {
@@ -48,6 +55,47 @@ function Media() {
       toast.success("Asset added to the library");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not add that asset");
+    }
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    let added = 0;
+    try {
+      for (const file of files) {
+        if (!ACCEPTED.includes(file.type)) {
+          toast.error(`${file.name}: only PNG, JPG, GIF or WebP images`);
+          continue;
+        }
+        if (file.size > MAX_BYTES) {
+          toast.error(`${file.name}: larger than 10 MB`);
+          continue;
+        }
+        try {
+          const { url: publicUrl, storagePath } = await uploadMedia(file);
+          const label = file.name.replace(/\.[^.]+$/, "");
+          await addMedia({
+            name: (files.length === 1 && name.trim()) || label,
+            url: publicUrl,
+            kind,
+            storagePath,
+          });
+          added += 1;
+        } catch (error) {
+          toast.error(
+            `${file.name}: ${error instanceof Error ? error.message : "upload failed"}`,
+          );
+        }
+      }
+      if (added) {
+        setName("");
+        setTags("");
+        toast.success(added === 1 ? "Image added to the library" : `${added} images added`);
+      }
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
     }
   };
 
