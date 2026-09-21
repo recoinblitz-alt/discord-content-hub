@@ -123,6 +123,10 @@ interface StoreValue {
   uploadMedia: (file: File) => Promise<{ url: string; storagePath: string }>;
   removeMedia: (id: string) => Promise<void>;
   saveTemplate: (template: Omit<Template, "id" | "orgId" | "uses">) => Promise<void>;
+  updateTemplate: (
+    id: string,
+    template: Omit<Template, "id" | "orgId" | "uses">,
+  ) => Promise<void>;
   removeTemplate: (id: string) => Promise<void>;
   bumpTemplate: (id: string) => Promise<void>;
   saveEvent: (
