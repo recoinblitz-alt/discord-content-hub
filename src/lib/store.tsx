@@ -219,8 +219,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const dataQuery = useQuery({
     queryKey: ["org-data", orgId, activeMembership?.role],
     enabled: Boolean(orgId && activeMembership),
-    staleTime: 30_000,
-    refetchOnWindowFocus: false,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchInterval: 20_000,
+    refetchIntervalInBackground: false,
     queryFn: async (): Promise<OrgData> => {
       const id = orgId!;
       const memberRequest =
@@ -268,8 +271,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const eventsQuery = useQuery({
     queryKey: ["org-events", orgId],
     enabled: Boolean(orgId),
-    staleTime: 30_000,
-    refetchOnWindowFocus: false,
+    staleTime: 15_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: 20_000,
+    refetchIntervalInBackground: false,
     queryFn: async (): Promise<OrgEvent[]> => {
       const { data: rows, error } = await supabase
         .from("org_events")

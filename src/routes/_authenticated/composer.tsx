@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
 import { ChannelPicker } from "@/components/channel-picker";
+import { DateTimeField } from "@/components/date-time-field";
 import { DiscordPreview } from "@/components/discord-preview";
 import { StatusBadge } from "@/components/status-badge";
 import {
@@ -828,12 +829,12 @@ function Composer() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="mb-1.5 block text-xs">Date & time</Label>
-                  <Input
+                  <DateTimeField
                     disabled={!permissions.publishDirectly}
-                    type="datetime-local"
                     value={scheduleAt}
-                    onChange={(e) => setScheduleAt(e.target.value)}
+                    onChange={setScheduleAt}
                   />
+
                 </div>
                 <div>
                   <Label className="mb-1.5 block text-xs">Timezone</Label>
