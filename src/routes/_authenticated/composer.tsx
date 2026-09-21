@@ -892,6 +892,16 @@ function Composer() {
           </section>
         </div>
       </div>
+      <TemplateDialog
+        open={templateDialogOpen}
+        onOpenChange={setTemplateDialogOpen}
+        draft={templateDraft}
+        metaOnly
+        title="Save as template"
+        botName={server?.botName ?? "Relaystack Bot"}
+        botAvatar={server?.botAvatar ?? ""}
+        onSave={saveAsTemplate}
+      />
     </AppShell>
   );
 }
