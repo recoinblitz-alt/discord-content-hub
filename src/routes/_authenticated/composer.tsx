@@ -853,7 +853,7 @@ function Composer() {
                   />
                   {!permissions.publishDirectly && (
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      Pick your preferred time — an admin confirms it when approving.
+                      Required — pick the time you want this posted, then submit for approval.
                     </p>
                   )}
                 </div>
