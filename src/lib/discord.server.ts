@@ -327,10 +327,10 @@ export async function deliverPost(postId: string) {
 
     // Anything that couldn't be uploaded still shows up as an embed image.
     const payload = buildDiscordPayload({
-      ...(post as never),
+      ...(post as Record<string, unknown>),
       attachments: leftovers,
       media_mode: "embed",
-    } as never);
+    } as unknown as PostLike);
 
     const messageId = files.length
       ? await sendDiscordMessageWithFiles(secret.bot_token, channel.discord_id, payload, files)
