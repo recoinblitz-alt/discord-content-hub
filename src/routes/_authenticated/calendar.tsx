@@ -461,11 +461,11 @@ function CalendarPage() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <Label className="mb-1.5 block text-xs">Date and time</Label>
-                  <Input
-                    type="datetime-local"
+                  <DateTimeField
                     value={draft.startsAt}
-                    onChange={(e) => setDraft({ ...draft, startsAt: e.target.value })}
+                    onChange={(next) => setDraft({ ...draft, startsAt: next })}
                   />
+
                 </div>
                 <div>
                   <Label className="mb-1.5 block text-xs">Timezone</Label>

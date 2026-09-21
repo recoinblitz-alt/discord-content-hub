@@ -95,13 +95,13 @@ function AcceptInvite() {
       toast.error("Enter your name");
       return;
     }
-    if (password.length < 8) {
+    if (password && password.length < 8) {
       toast.error("Use at least 8 characters");
       return;
     }
     setState("working");
     const { error } = await supabase.auth.updateUser({
-      password,
+      ...(password ? { password } : {}),
       data: { display_name: name.trim(), invite_profile_complete: true },
     });
     if (error) {
