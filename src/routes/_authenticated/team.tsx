@@ -48,6 +48,17 @@ function Team() {
     orgPosts,
   } = useWorkspace();
   const roles: Role[] = ["super_admin", "admin", "approver", "user"];
+  const assignableRoles: Role[] = currentUser.role === "super_admin" ? roles : ["admin", "approver", "user"];
+
+  if (!permissions.manageTeam) {
+    return (
+      <AppShell title="Team & roles" subtitle="Restricted">
+        <div className="mx-auto max-w-md rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted-foreground">
+          Only Super Admins and Admins can view members or manage roles.
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell
@@ -80,11 +91,15 @@ function Team() {
                   <td className="px-4 py-3">
                     <select
                       value={m.role}
-                      disabled={!permissions.manageTeam}
-                      onChange={(e) => void setMemberRole(m.id, e.target.value as Role)}
+                      disabled={currentUser.id === m.id || (currentUser.role === "admin" && m.role === "super_admin")}
+                      onChange={(e) => {
+                        void setMemberRole(m.id, e.target.value as Role).catch((error) =>
+                          toast.error(error instanceof Error ? error.message : "Could not change role"),
+                        );
+                      }}
                       className="rounded-lg border border-input bg-background px-2 py-1.5 text-sm disabled:opacity-60"
                     >
-                      {roles.map((r) => (
+                      {(m.role === "super_admin" && !assignableRoles.includes("super_admin") ? ["super_admin"] : assignableRoles).map((r) => (
                         <option key={r} value={r}>
                           {ROLE_LABELS[r]}
                         </option>
@@ -100,7 +115,7 @@ function Team() {
                         You
                       </span>
                     ) : (
-                      permissions.manageTeam && (
+                        permissions.manageTeam && !(currentUser.role === "admin" && m.role === "super_admin") && (
                         <button
                           onClick={() => void removeMember(m.id)}
                           className="rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
@@ -159,6 +174,7 @@ function Team() {
 }
 
 function InvitePanel({ orgId }: { orgId: string }) {
+  const { currentUser } = useWorkspace();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("user");
   const [busy, setBusy] = useState(false);
@@ -167,14 +183,14 @@ function InvitePanel({ orgId }: { orgId: string }) {
   const send = async () => {
     setBusy(true);
     try {
-      const result = await createInvite({ data: { orgId, email, role } });
+      const result = await createInvite({ data: { orgId, email, role, origin: window.location.origin } });
       if (!result.ok) {
         toast.error(result.message);
         return;
       }
       setLink(`${window.location.origin}/invite/${result.token}`);
       setEmail("");
-      toast.success(`Invite ready for ${result.email}`);
+      toast.success(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the invite");
     } finally {
@@ -202,7 +218,10 @@ function InvitePanel({ orgId }: { orgId: string }) {
           onChange={(e) => setRole(e.target.value as Role)}
           className="rounded-lg border border-input bg-background px-2 py-2 text-sm"
         >
-          {(["admin", "approver", "user"] as Role[]).map((r) => (
+          {(currentUser.role === "super_admin"
+            ? (["super_admin", "admin", "approver", "user"] as Role[])
+            : (["admin", "approver", "user"] as Role[])
+          ).map((r) => (
             <option key={r} value={r}>
               {ROLE_LABELS[r]}
             </option>

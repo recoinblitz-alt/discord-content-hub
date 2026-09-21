@@ -14,6 +14,7 @@ import {
 
 import { supabase } from "@/integrations/supabase/client";
 import { publicMediaUrl } from "@/lib/public-url";
+import { changeMemberRole, removeOrgMember } from "@/lib/members.functions";
 import { publishPost } from "@/lib/discord.functions";
 import {
   mapAudit,
@@ -190,10 +191,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         .select("org_id, role, organizations(id, name, kind, plan)")
         .order("created_at", { ascending: true });
       if (error) throw error;
+      const seen = new Set<string>();
       return (data ?? []).flatMap((row) => {
         const org = row.organizations as Record<string, unknown> | null;
         if (!org) return [];
-        return [{ org: mapOrganization(org), role: row.role as Role }];
+        const mapped = mapOrganization(org);
+        if (seen.has(mapped.id)) return [];
+        seen.add(mapped.id);
+        return [{ org: mapped, role: row.role as Role }];
       });
     },
   });
@@ -365,22 +370,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       setMemberRole: async (userId, nextRole) => {
         if (!orgId) return;
-        const { error } = await supabase
-          .from("org_members")
-          .update({ role: nextRole })
-          .eq("org_id", orgId)
-          .eq("user_id", userId);
-        if (error) throw error;
+        await changeMemberRole({ data: { orgId, userId, role: nextRole } });
         await refresh();
       },
       removeMember: async (userId) => {
         if (!orgId) return;
-        const { error } = await supabase
-          .from("org_members")
-          .delete()
-          .eq("org_id", orgId)
-          .eq("user_id", userId);
-        if (error) throw error;
+        await removeOrgMember({ data: { orgId, userId } });
         await refresh();
       },
       channelsOfServer: (serverId) => data.channels.filter((c) => c.serverId === serverId),

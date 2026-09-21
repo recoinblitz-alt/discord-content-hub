@@ -123,6 +123,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
               const active = pathname.startsWith(item.to);
               const hidden =
                 (item.to === "/settings" && !permissions.configureServers) ||
+                (item.to === "/team" && !permissions.manageTeam) ||
                 (item.to === "/approvals" && !permissions.approve);
               if (hidden) return null;
               return (
@@ -190,7 +191,11 @@ export function AppFrame({ children }: { children: ReactNode }) {
               </div>
             </div>
             <div className="flex gap-1 overflow-x-auto border-t border-border px-3 py-2">
-              {nav.map((item) => (
+              {nav.filter((item) =>
+                !((item.to === "/settings" && !permissions.configureServers) ||
+                  (item.to === "/team" && !permissions.manageTeam) ||
+                  (item.to === "/approvals" && !permissions.approve)),
+              ).map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
