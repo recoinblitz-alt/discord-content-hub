@@ -118,7 +118,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
                 variant="outline"
                 size="sm"
                 onClick={() => void newWorkspace()}
-                disabled={creating}
+                disabled={creating || !permissions.manageOrganizations}
                 title="New workspace"
               >
                 <Plus className="h-4 w-4" />

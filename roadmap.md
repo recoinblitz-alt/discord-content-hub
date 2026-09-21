@@ -10,3 +10,7 @@
 - [x] Prevent duplicate workspace memberships and duplicate workspace display.
 - [x] Optimize navigation, editor, tables, calendar, dialogs, and controls for phones.
 - [x] Verify role gates and core screens on mobile and desktop.
+- [x] Repair the complete invited-member journey: email, name/password setup, acceptance, and direct workspace entry.
+- [x] Refresh the backend schema cache and make invite acceptance retry safely.
+- [x] Re-audit every role against UI, server, and database permissions.
+- [ ] Verify new/existing invite links, duplicate prevention, and all four roles end to end.

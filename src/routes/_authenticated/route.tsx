@@ -35,6 +35,8 @@ function AuthenticatedLayout() {
 
 function WorkspaceLayout() {
   const { ready, loading, organizations } = useWorkspace();
+  const pendingInvite =
+    typeof window !== "undefined" ? window.localStorage.getItem("relaystack-pending-invite") : null;
 
   if (!ready || (loading && organizations.length === 0)) {
     return (
@@ -44,6 +46,13 @@ function WorkspaceLayout() {
     );
   }
 
+  if (organizations.length === 0 && pendingInvite) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
   if (organizations.length === 0) return <CreateWorkspace />;
 
   return (

@@ -168,6 +168,7 @@ export function mapMedia(row: Row): MediaAsset {
     storagePath,
     tags: [],
     addedAt: str(row["created_at"]),
+    createdBy: row["created_by"] ? str(row["created_by"]) : null,
   };
 }
 

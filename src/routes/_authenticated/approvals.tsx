@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/approvals")({
 });
 
 function Approvals() {
-  const { orgPosts, serverOf, channelOf, memberOf, auditOf, transition, permissions } = useWorkspace();
+  const { orgPosts, serverOf, channelOf, memberOf, auditOf, transition, permissions, currentUser } = useWorkspace();
   const queue = orgPosts
     .filter((p) => p.status === "pending")
     .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
@@ -39,6 +39,7 @@ function Approvals() {
   const [note, setNote] = useState("");
 
   const selected = orgPosts.find((p) => p.id === selectedId) ?? queue[0];
+  const canReviewSelected = Boolean(selected && selected.authorId !== currentUser.id);
 
   if (!permissions.approve) {
     return (
@@ -63,17 +64,20 @@ function Approvals() {
       toast.error("Add a comment so the creator knows what to change");
       return;
     }
-    transition(selected.id, status, action, note.trim() || undefined);
-    setNote("");
-    toast.success(
-      status === "approved"
-        ? "Approved — ready to schedule"
-        : status === "rejected"
-          ? "Rejected with feedback"
-          : "Changes requested",
-    );
-    const next = queue.find((p) => p.id !== selected.id);
-    setSelectedId(next?.id ?? null);
+    void transition(selected.id, status, action, note.trim() || undefined)
+      .then(() => {
+        setNote("");
+        toast.success(
+          status === "approved"
+            ? "Approved — ready to schedule"
+            : status === "rejected"
+              ? "Rejected with feedback"
+              : "Changes requested",
+        );
+        const next = queue.find((p) => p.id !== selected.id);
+        setSelectedId(next?.id ?? null);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Review failed"));
   };
 
   return (
@@ -136,13 +140,13 @@ function Approvals() {
                 placeholder="Comment for the creator (required when rejecting or requesting changes)"
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button onClick={() => act("approved", "approved")}>
+                <Button disabled={!canReviewSelected} onClick={() => act("approved", "approved")}>
                   <Check className="h-4 w-4" /> Approve
                 </Button>
-                <Button variant="secondary" onClick={() => act("changes_requested", "changes_requested")}>
+                <Button disabled={!canReviewSelected} variant="secondary" onClick={() => act("changes_requested", "changes_requested")}>
                   <MessageSquare className="h-4 w-4" /> Request changes
                 </Button>
-                <Button variant="destructive" onClick={() => act("rejected", "rejected")}>
+                <Button disabled={!canReviewSelected} variant="destructive" onClick={() => act("rejected", "rejected")}>
                   <X className="h-4 w-4" /> Reject
                 </Button>
                 <Button asChild variant="outline" className="ml-auto">
@@ -151,6 +155,9 @@ function Approvals() {
                   </Link>
                 </Button>
               </div>
+              {!canReviewSelected && (
+                <p className="mt-2 text-xs text-muted-foreground">Another reviewer must decide on your submission.</p>
+              )}
             </div>
 
             <div className="rounded-xl border border-border bg-surface">

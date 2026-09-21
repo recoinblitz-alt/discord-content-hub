@@ -244,8 +244,7 @@ function Composer() {
 
 
   const canEdit =
-    permissions.approve ||
-    permissions.configureServers ||
+    permissions.publishDirectly ||
     post.authorId === currentUser.id ||
     isNew;
 
@@ -284,7 +283,7 @@ function Composer() {
     >
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         {/* ── Editor ─────────────────────────────── */}
-        <div className="min-w-0 space-y-5">
+        <fieldset disabled={!canEdit} className="min-w-0 space-y-5">
           {feedback.length > 0 && post.status === "changes_requested" && (
             <div className="rounded-xl border border-info/40 bg-info/10 p-4">
               <h3 className="text-sm font-semibold text-info">Changes requested</h3>
@@ -304,7 +303,8 @@ function Composer() {
             <div className="grid gap-4 p-4 sm:grid-cols-2">
               <div>
                 <Label className="mb-1.5 block text-xs">Server</Label>
-                <select
+                 <select
+                   disabled={!canEdit}
                   value={post.serverId}
                   onChange={(e) => {
                     const sid = e.target.value;
@@ -338,7 +338,7 @@ function Composer() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="mb-1.5 block text-xs">Internal title</Label>
-                <Input value={post.title} onChange={(e) => set("title", e.target.value)} />
+                 <Input disabled={!canEdit} value={post.title} onChange={(e) => set("title", e.target.value)} />
               </div>
               <div className="sm:col-span-2 flex flex-wrap items-center gap-2">
                 <span className="text-xs text-muted-foreground">Message type</span>
@@ -346,6 +346,7 @@ function Composer() {
                   <button
                     key={k}
                     onClick={() => set("kind", k)}
+                     disabled={!canEdit}
                     className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                       post.kind === k
                         ? "border-primary bg-primary/15 text-primary"
@@ -358,6 +359,7 @@ function Composer() {
                 <div className="flex min-w-0 basis-full items-center gap-2 sm:ml-auto sm:basis-auto">
                   <Sparkles className="h-4 w-4 text-muted-foreground" />
                   <select
+                     disabled={!canEdit}
                     value=""
                     onChange={(e) => e.target.value && applyTemplate(e.target.value)}
                     className="min-w-0 flex-1 rounded-lg border border-input bg-background px-2 py-1.5 text-xs"
@@ -378,6 +380,7 @@ function Composer() {
             <div className={headClass}>Message content</div>
             <div className="p-4">
               <Textarea
+                disabled={!canEdit}
                 rows={3}
                 value={post.content}
                 onChange={(e) => set("content", e.target.value)}
@@ -794,7 +797,7 @@ function Composer() {
               )}
             </div>
           </section>
-        </div>
+        </fieldset>
 
         {/* ── Preview + schedule ─────────────────── */}
         <div className="min-w-0 space-y-5 xl:sticky xl:top-28 xl:self-start">
@@ -826,6 +829,7 @@ function Composer() {
                 <div>
                   <Label className="mb-1.5 block text-xs">Date & time</Label>
                   <Input
+                    disabled={!permissions.publishDirectly}
                     type="datetime-local"
                     value={scheduleAt}
                     onChange={(e) => setScheduleAt(e.target.value)}
@@ -834,6 +838,7 @@ function Composer() {
                 <div>
                   <Label className="mb-1.5 block text-xs">Timezone</Label>
                   <select
+                    disabled={!permissions.publishDirectly}
                     value={post.timezone}
                     onChange={(e) => set("timezone", e.target.value)}
                     className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
@@ -850,10 +855,12 @@ function Composer() {
                 className="w-full"
                 variant="secondary"
                 onClick={schedule}
-                disabled={needsApproval && post.status !== "approved"}
+                disabled={!permissions.publishDirectly || (needsApproval && post.status !== "approved")}
               >
                 <CalendarClock className="h-4 w-4" />
-                {needsApproval && post.status !== "approved"
+                {!permissions.publishDirectly
+                  ? "Admin access required to schedule"
+                  : needsApproval && post.status !== "approved"
                   ? "Approval required before scheduling"
                   : "Schedule post"}
               </Button>

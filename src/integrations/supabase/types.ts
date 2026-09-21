@@ -565,6 +565,10 @@ export type Database = {
     }
     Functions: {
       accept_org_invite: { Args: { _token: string }; Returns: Json }
+      create_workspace: {
+        Args: { _kind: string; _name: string }
+        Returns: string
+      }
       has_org_role: {
         Args: {
           _org: string

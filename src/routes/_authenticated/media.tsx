@@ -32,7 +32,7 @@ const ACCEPTED = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 const MAX_BYTES = 10 * 1024 * 1024;
 
 function Media() {
-  const { orgMedia, addMedia, removeMedia, uploadMedia } = useWorkspace();
+  const { orgMedia, addMedia, removeMedia, uploadMedia, currentUser } = useWorkspace();
   const [mode, setMode] = useState<"upload" | "link">("upload");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
@@ -120,7 +120,7 @@ function Media() {
                   <Button asChild size="sm" variant="outline" className="flex-1">
                     <Link to="/composer">Use in post</Link>
                   </Button>
-                  <Button
+                  {(["super_admin", "admin"].includes(currentUser.role) || m.createdBy === currentUser.id) && <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => {
@@ -129,7 +129,7 @@ function Media() {
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </Button>}
                 </div>
               </div>
             </div>
