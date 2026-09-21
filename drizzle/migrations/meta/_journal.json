@@ -127,6 +127,13 @@
       "when": 1790008609623,
       "tag": "0017_harden_invitation_readiness",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790015287648,
+      "tag": "0018_allow_proposed_schedule_for_members",
+      "breakpoints": true
     }
   ]
 }

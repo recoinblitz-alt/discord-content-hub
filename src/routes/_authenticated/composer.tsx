@@ -182,11 +182,18 @@ function Composer() {
 
   const submit = () =>
     run(async () => {
-      const merged = await persist({
-        status: "pending",
-        scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
-      });
-      await transition(merged.id, "pending", history.length ? "resubmitted" : "submitted");
+      if (!scheduleAt) {
+        toast.error("Pick the date and time you want this posted before submitting");
+        return;
+      }
+      const iso = new Date(scheduleAt).toISOString();
+      const merged = await persist({ scheduledAt: iso });
+      await transition(
+        merged.id,
+        "pending",
+        history.length ? "resubmitted" : "submitted",
+        `Requested for ${fullDate(iso)} ${post.timezone}`,
+      );
       toast.success(
         needsApproval
           ? `Submitted to the approval queue for #${channel?.name}`
@@ -274,7 +281,12 @@ function Composer() {
             </Button>
           )}
           {(post.status === "draft" || post.status === "changes_requested" || post.status === "rejected") && (
-            <Button size="sm" onClick={submit} disabled={!canEdit}>
+            <Button
+              size="sm"
+              onClick={submit}
+              disabled={!canEdit || !scheduleAt}
+              title={!scheduleAt ? "Pick a date and time first" : undefined}
+            >
               <Send className="h-4 w-4" />
               {post.status === "draft" ? "Submit for approval" : "Resubmit"}
             </Button>
@@ -841,7 +853,7 @@ function Composer() {
                   />
                   {!permissions.publishDirectly && (
                     <p className="mt-1.5 text-xs text-muted-foreground">
-                      Pick your preferred time — an admin confirms it when approving.
+                      Required — pick the time you want this posted, then submit for approval.
                     </p>
                   )}
                 </div>
