@@ -134,6 +134,13 @@
       "when": 1790015287648,
       "tag": "0018_allow_proposed_schedule_for_members",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790016392830,
+      "tag": "0019_approver_can_schedule_on_approval",
+      "breakpoints": true
     }
   ]
 }
