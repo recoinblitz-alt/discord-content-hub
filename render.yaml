@@ -3,9 +3,9 @@ services:
     name: relaystack
     runtime: node
     plan: starter
-    buildCommand: bun install --frozen-lockfile && bun run build:render
-    preDeployCommand: bun run db:migrate
-    startCommand: bun run start
+    buildCommand: npm install && npm run build:render
+    preDeployCommand: npm run db:migrate
+    startCommand: npm run start
     healthCheckPath: /
     envVars:
       - key: NODE_VERSION

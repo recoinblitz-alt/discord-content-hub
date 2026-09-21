@@ -30,6 +30,8 @@ The Blueprint uses:
 - Health check: `/`
 - Scheduled publishing: `POST /api/public/publish-due` every minute
 
+Render's Blueprint uses Node.js and npm, so no Bun runtime is required in production.
+
 ## Manual production commands
 
 ```sh
