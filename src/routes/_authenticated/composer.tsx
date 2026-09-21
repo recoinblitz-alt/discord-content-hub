@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
+  BookmarkPlus,
   CalendarClock,
   Image as ImageIcon,
   Plus,
