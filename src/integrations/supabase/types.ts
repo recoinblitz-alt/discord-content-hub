@@ -108,6 +108,7 @@ export type Database = {
           kind: string
           name: string
           org_id: string
+          storage_path: string | null
           url: string
         }
         Insert: {
@@ -117,6 +118,7 @@ export type Database = {
           kind?: string
           name: string
           org_id: string
+          storage_path?: string | null
           url: string
         }
         Update: {
@@ -126,6 +128,7 @@ export type Database = {
           kind?: string
           name?: string
           org_id?: string
+          storage_path?: string | null
           url?: string
         }
         Relationships: [

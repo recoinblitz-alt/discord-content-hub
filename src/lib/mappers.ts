@@ -159,6 +159,7 @@ export function mapMedia(row: Row): MediaAsset {
     name: str(row["name"]),
     url: str(row["url"]),
     kind: str(row["kind"], "banner") as MediaAsset["kind"],
+    storagePath: row["storage_path"] ? str(row["storage_path"]) : null,
     tags: [],
     addedAt: str(row["created_at"]),
   };

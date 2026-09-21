@@ -162,6 +162,8 @@ export interface MediaAsset {
   kind: "banner" | "thumbnail" | "icon";
   tags: string[];
   addedAt: string;
+  /** Set when the file was uploaded from a device; empty for linked images. */
+  storagePath: string | null;
 }
 
 export const DISCORD_COLORS: { name: string; hex: string }[] = [

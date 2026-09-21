@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { Link2, Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -28,12 +28,19 @@ export const Route = createFileRoute("/_authenticated/media")({
   component: Media,
 });
 
+const ACCEPTED = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+const MAX_BYTES = 10 * 1024 * 1024;
+
 function Media() {
-  const { orgMedia, addMedia, removeMedia } = useWorkspace();
+  const { orgMedia, addMedia, removeMedia, uploadMedia } = useWorkspace();
+  const [mode, setMode] = useState<"upload" | "link">("upload");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [kind, setKind] = useState<"banner" | "thumbnail" | "icon">("banner");
   const [tags, setTags] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const submit = async () => {
     if (!name.trim() || !url.trim()) {
@@ -48,6 +55,47 @@ function Media() {
       toast.success("Asset added to the library");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not add that asset");
+    }
+  };
+
+  const handleFiles = async (files: File[]) => {
+    if (!files.length) return;
+    setUploading(true);
+    let added = 0;
+    try {
+      for (const file of files) {
+        if (!ACCEPTED.includes(file.type)) {
+          toast.error(`${file.name}: only PNG, JPG, GIF or WebP images`);
+          continue;
+        }
+        if (file.size > MAX_BYTES) {
+          toast.error(`${file.name}: larger than 10 MB`);
+          continue;
+        }
+        try {
+          const { url: publicUrl, storagePath } = await uploadMedia(file);
+          const label = file.name.replace(/\.[^.]+$/, "");
+          await addMedia({
+            name: (files.length === 1 && name.trim()) || label,
+            url: publicUrl,
+            kind,
+            storagePath,
+          });
+          added += 1;
+        } catch (error) {
+          toast.error(
+            `${file.name}: ${error instanceof Error ? error.message : "upload failed"}`,
+          );
+        }
+      }
+      if (added) {
+        setName("");
+        setTags("");
+        toast.success(added === 1 ? "Image added to the library" : `${added} images added`);
+      }
+    } finally {
+      setUploading(false);
+      if (fileInput.current) fileInput.current.value = "";
     }
   };
 
@@ -90,15 +138,44 @@ function Media() {
 
         <div className="rounded-xl border border-border bg-surface p-4 lg:sticky lg:top-28 lg:self-start">
           <h2 className="text-sm font-semibold">Add asset</h2>
+
+          <div className="mt-3 flex items-center gap-1 rounded-lg border border-border p-0.5">
+            {(
+              [
+                ["upload", "Upload from computer", Upload],
+                ["link", "Paste a link", Link2],
+              ] as const
+            ).map(([value, label, Icon]) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setMode(value)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition ${
+                  mode === value ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" /> {label}
+              </button>
+            ))}
+          </div>
+
           <div className="mt-3 space-y-3">
             <div>
-              <Label className="mb-1.5 block text-xs">Name</Label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <Label className="mb-1.5 block text-xs">
+                Name {mode === "upload" && <span className="text-muted-foreground">(optional)</span>}
+              </Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={mode === "upload" ? "Defaults to the file name" : ""}
+              />
             </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">Image URL</Label>
-              <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" />
-            </div>
+            {mode === "link" && (
+              <div>
+                <Label className="mb-1.5 block text-xs">Image URL</Label>
+                <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://" />
+              </div>
+            )}
             <div>
               <Label className="mb-1.5 block text-xs">Kind</Label>
               <select
@@ -115,12 +192,56 @@ function Media() {
               <Label className="mb-1.5 block text-xs">Tags (comma separated)</Label>
               <Input value={tags} onChange={(e) => setTags(e.target.value)} />
             </div>
-            {url && (
+            {mode === "link" && url && (
               <img src={url} alt="" className="h-28 w-full rounded-lg border border-border object-cover" />
             )}
-            <Button className="w-full" onClick={submit}>
-              <Plus className="h-4 w-4" /> Add to library
-            </Button>
+
+            {mode === "upload" ? (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept={ACCEPTED.join(",")}
+                  multiple
+                  hidden
+                  onChange={(e) => void handleFiles(Array.from(e.target.files ?? []))}
+                />
+                <button
+                  type="button"
+                  disabled={uploading}
+                  onClick={() => fileInput.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    void handleFiles(Array.from(e.dataTransfer.files));
+                  }}
+                  className={`flex w-full flex-col items-center gap-1.5 rounded-lg border-2 border-dashed px-4 py-8 text-center transition ${
+                    dragging ? "border-primary bg-primary/5" : "border-border hover:border-primary/60"
+                  } ${uploading ? "opacity-70" : ""}`}
+                >
+                  {uploading ? (
+                    <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                  ) : (
+                    <Upload className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {uploading ? "Uploading…" : "Click or drop images here"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    PNG, JPG, GIF or WebP · up to 10 MB each
+                  </span>
+                </button>
+              </>
+            ) : (
+              <Button className="w-full" onClick={submit}>
+                <Plus className="h-4 w-4" /> Add to library
+              </Button>
+            )}
           </div>
         </div>
       </div>
