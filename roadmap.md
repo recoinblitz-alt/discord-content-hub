@@ -15,3 +15,7 @@
 - [x] Re-audit every role against UI, server, and database permissions.
 - [ ] Verify new/existing invite links, duplicate prevention, and all four roles end to end.
 - [x] Verify normal users cannot access team management or other members' email and role data.
+- [x] Validate invite links before authentication and report deployment readiness in health checks.
+- [x] Reuse pending invitations instead of creating duplicate active links.
+- [ ] Configure the MUNO sender domain and branded authentication emails.
+- [ ] Verify a fresh Render invitation from email through workspace entry.
