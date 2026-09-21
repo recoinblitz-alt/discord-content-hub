@@ -22,6 +22,13 @@
       "when": 1789966145708,
       "tag": "0002_org_members_profile_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789970787314,
+      "tag": "0003_org_events_and_delivery_claim",
+      "breakpoints": true
     }
   ]
 }
