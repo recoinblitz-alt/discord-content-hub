@@ -162,3 +162,17 @@ export function mapMedia(row: Row): MediaAsset {
     addedAt: str(row["created_at"]),
   };
 }
+
+export function mapEvent(row: Row): OrgEvent {
+  return {
+    id: str(row["id"]),
+    orgId: str(row["org_id"]),
+    title: str(row["title"], "Untitled event"),
+    description: str(row["description"]),
+    startsAt: str(row["starts_at"]),
+    endsAt: row["ends_at"] ? str(row["ends_at"]) : null,
+    timezone: str(row["timezone"], "UTC"),
+    color: str(row["color"], "#5865F2"),
+    createdBy: row["created_by"] ? str(row["created_by"]) : null,
+  };
+}

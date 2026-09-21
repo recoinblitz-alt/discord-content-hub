@@ -256,3 +256,16 @@ export const TIMEZONES = [
 ];
 
 export type MediaAssetKind = MediaAsset["kind"];
+
+/** Workspace-wide calendar event, visible to every member, managed by admins. */
+export interface OrgEvent {
+  id: string;
+  orgId: string;
+  title: string;
+  description: string;
+  startsAt: string;
+  endsAt: string | null;
+  timezone: string;
+  color: string;
+  createdBy: string | null;
+}
