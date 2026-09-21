@@ -7,6 +7,7 @@ import {
   type EmbedButton,
   type MediaAsset,
   type Member,
+  type OrgEvent,
   type Organization,
   type Post,
   type Role,

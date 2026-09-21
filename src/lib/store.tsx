@@ -16,6 +16,7 @@ import { publishPost } from "@/lib/discord.functions";
 import {
   mapAudit,
   mapChannel,
+  mapEvent,
   mapMedia,
   mapMember,
   mapOrganization,
