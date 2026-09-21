@@ -565,9 +565,21 @@ export type Database = {
     }
     Functions: {
       accept_org_invite: { Args: { _token: string }; Returns: Json }
+      can_manage_profile: {
+        Args: { _caller: string; _profile: string }
+        Returns: boolean
+      }
       create_workspace: {
         Args: { _kind: string; _name: string }
         Returns: string
+      }
+      get_org_directory: {
+        Args: { _org: string }
+        Returns: {
+          avatar_url: string
+          display_name: string
+          user_id: string
+        }[]
       }
       has_org_role: {
         Args: {
