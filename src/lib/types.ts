@@ -131,6 +131,8 @@ export interface Post {
   embed: DiscordEmbed;
   buttons: EmbedButton[];
   attachments: string[];
+  /** "upload" sends files to Discord natively; "embed" links them inside the embed card. */
+  mediaMode: "upload" | "embed";
   status: PostStatus;
   scheduledAt: string | null;
   timezone: string;

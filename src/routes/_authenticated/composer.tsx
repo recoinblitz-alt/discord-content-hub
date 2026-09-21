@@ -108,6 +108,7 @@ function Composer() {
       embed: template ? structuredClone(template.embed) : emptyEmbed(),
       buttons: template ? structuredClone(template.buttons) : [],
       attachments: [],
+      mediaMode: "upload",
       status: "draft",
       scheduledAt: null,
       timezone: "UTC",
@@ -747,6 +748,7 @@ function Composer() {
               embed={post.embed}
               buttons={post.buttons}
               attachments={post.attachments}
+              mediaMode={post.mediaMode}
               timestamp={post.scheduledAt}
             />
           </div>
