@@ -107,8 +107,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{var t=localStorage.getItem("discord-cms-theme");document.documentElement.classList.toggle("dark",t!=="light")}catch(e){}',
+          }}
+        />
         <HeadContent />
       </head>
       <body>

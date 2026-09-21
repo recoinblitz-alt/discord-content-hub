@@ -109,11 +109,15 @@ function Dashboard() {
                 search={{ postId: p.id }}
                 className="flex items-center gap-3 px-5 py-3.5 transition hover:bg-accent/40"
               >
-                <img
-                  src={memberOf(p.authorId)?.avatar}
-                  alt=""
-                  className="h-8 w-8 rounded-full bg-muted"
-                />
+                {memberOf(p.authorId)?.avatar ? (
+                  <img
+                    src={memberOf(p.authorId)?.avatar}
+                    alt=""
+                    className="h-8 w-8 rounded-full bg-muted"
+                  />
+                ) : (
+                  <div className="h-8 w-8 rounded-full bg-muted" />
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm font-medium">{p.title}</div>
                   <div className="truncate text-xs text-muted-foreground">

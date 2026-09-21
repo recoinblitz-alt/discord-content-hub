@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { AppFrame } from "@/components/app-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,9 +13,9 @@ import { useWorkspace } from "@/lib/store";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    const { data, error } = await supabase.auth.getSession();
+    if (error || !data.session?.user) throw redirect({ to: "/auth" });
+    return { user: data.session.user };
   },
   component: AuthenticatedLayout,
 });
@@ -32,7 +33,11 @@ function AuthenticatedLayout() {
 
   if (organizations.length === 0) return <CreateWorkspace />;
 
-  return <Outlet />;
+  return (
+    <AppFrame>
+      <Outlet />
+    </AppFrame>
+  );
 }
 
 function CreateWorkspace() {
