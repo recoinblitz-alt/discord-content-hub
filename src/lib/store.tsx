@@ -8,6 +8,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  type Context,
   type ReactNode,
 } from "react";
 
@@ -135,7 +136,18 @@ interface StoreValue {
   removeEvent: (id: string) => Promise<void>;
 }
 
-const StoreContext = createContext<StoreValue | null>(null);
+type StoreGlobal = typeof globalThis & {
+  __relaystackStoreContext?: Context<StoreValue | null>;
+};
+
+// Keep one context identity across Vite hot updates. Without this, a route can
+// temporarily import a newer context while its mounted provider still uses the
+// previous module instance, causing false "outside StoreProvider" crashes.
+const storeGlobal = globalThis as StoreGlobal;
+const StoreContext =
+  storeGlobal.__relaystackStoreContext ?? createContext<StoreValue | null>(null);
+storeGlobal.__relaystackStoreContext = StoreContext;
+StoreContext.displayName = "RelaystackStore";
 const ORG_KEY = "discord-cms-current-org";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
