@@ -50,6 +50,13 @@
       "when": 1790005098629,
       "tag": "0006_secure_roles_and_atomic_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790005194454,
+      "tag": "0007_restrict_approver_post_transitions",
+      "breakpoints": true
     }
   ]
 }
