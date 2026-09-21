@@ -228,6 +228,21 @@ function Composer() {
     toast.success(`Applied “${t.name}”`);
   };
 
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const templateDraft: TemplateDraft = templateDraftFrom({
+    kind: post.kind,
+    content: post.content,
+    embed: post.embed,
+    buttons: post.buttons,
+    name: post.title === "Untitled post" ? "" : post.title,
+  });
+
+  const saveAsTemplate = async (value: TemplateDraft) => {
+    await saveTemplate(value);
+    toast.success("Saved to the template library for everyone in this workspace");
+  };
+
+
   const canEdit =
     permissions.approve ||
     permissions.configureServers ||
