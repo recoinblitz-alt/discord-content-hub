@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/posts")({
 });
 
 function Posts() {
-  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf, memberOf, deletePost, publishNow } =
+  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf, memberOf, deletePost, publishNow, currentUser, permissions } =
     useWorkspace();
   const [retrying, setRetrying] = useState("");
   const [status, setStatus] = useState<PostStatus | "all">("all");
@@ -46,6 +46,7 @@ function Posts() {
       q.trim() ? `${p.title} ${p.content} ${p.embed.title}`.toLowerCase().includes(q.toLowerCase()) : true,
     )
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const canManagePost = (authorId: string) => permissions.publishDirectly || authorId === currentUser.id;
 
   return (
     <AppShell
@@ -126,9 +127,9 @@ function Posts() {
             </dl>
             {p.deliveryNote && <p className={`mt-3 text-xs ${p.status === "failed" ? "text-destructive" : "text-muted-foreground"}`}>{p.deliveryNote}</p>}
             <div className="mt-3 flex items-center justify-end gap-2 border-t border-border pt-3">
-              {p.status === "failed" && <Button size="sm" variant="outline" disabled={retrying === p.id} onClick={async () => { setRetrying(p.id); try { const result = await publishNow(p.id); result.ok ? toast.success(result.message) : toast.error(result.message); } catch (error) { toast.error(error instanceof Error ? error.message : "Retry failed"); } finally { setRetrying(""); } }}><RefreshCw className="h-3.5 w-3.5" /> Retry</Button>}
-              <Button asChild size="sm" variant="outline"><Link to="/composer" search={{ postId: p.id }}>Edit</Link></Button>
-              <Button size="icon" variant="ghost" onClick={() => { deletePost(p.id); toast.success("Post deleted"); }}><Trash2 className="h-4 w-4" /></Button>
+              {p.status === "failed" && permissions.publishDirectly && <Button size="sm" variant="outline" disabled={retrying === p.id} onClick={async () => { setRetrying(p.id); try { const result = await publishNow(p.id); result.ok ? toast.success(result.message) : toast.error(result.message); } catch (error) { toast.error(error instanceof Error ? error.message : "Retry failed"); } finally { setRetrying(""); } }}><RefreshCw className="h-3.5 w-3.5" /> Retry</Button>}
+              {canManagePost(p.authorId) && <Button asChild size="sm" variant="outline"><Link to="/composer" search={{ postId: p.id }}>Edit</Link></Button>}
+              {canManagePost(p.authorId) && <Button size="icon" variant="ghost" onClick={() => { void deletePost(p.id).then(() => toast.success("Post deleted")).catch((error) => toast.error(error instanceof Error ? error.message : "Could not delete post")); }}><Trash2 className="h-4 w-4" /></Button>}
             </div>
           </article>
         ))}
@@ -185,7 +186,7 @@ function Posts() {
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{relative(p.updatedAt)}</td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
-                  {p.status === "failed" && (
+                  {p.status === "failed" && permissions.publishDirectly && (
                     <Button
                       size="sm"
                       variant="outline"
@@ -206,16 +207,15 @@ function Posts() {
                       <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
                     </Button>
                   )}
-                  <Button
+                  {canManagePost(p.authorId) && <Button
                     size="icon"
                     variant="ghost"
                     onClick={() => {
-                      deletePost(p.id);
-                      toast.success("Post deleted");
+                      void deletePost(p.id).then(() => toast.success("Post deleted")).catch((error) => toast.error(error instanceof Error ? error.message : "Could not delete post"));
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </Button>}
                 </td>
               </tr>
             ))}

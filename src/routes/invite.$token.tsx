@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -28,9 +28,25 @@ export const PENDING_INVITE_KEY = "relaystack-pending-invite";
 function AcceptInvite() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
-  const [state, setState] = useState<"checking" | "signin" | "password" | "working" | "error">("checking");
+  const [state, setState] = useState<"checking" | "signin" | "setup" | "working" | "sent" | "error">("checking");
+  const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [message, setMessage] = useState("");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const completeAcceptance = async () => {
+    setState("working");
+    const result = await acceptInvite({ data: { token } });
+    if (!result.ok) {
+      setMessage(result.message);
+      setState("error");
+      return;
+    }
+    localStorage.removeItem(PENDING_INVITE_KEY);
+    localStorage.setItem("discord-cms-current-org", result.orgId);
+    await navigate({ to: "/dashboard", replace: true });
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -42,29 +58,28 @@ function AcceptInvite() {
         setState("signin");
         return;
       }
-      const invited = new URLSearchParams(window.location.search).get("invited") === "1";
-      if (invited && !data.session.user.user_metadata?.["invite_password_set"]) {
-        setState("password");
+      localStorage.setItem(PENDING_INVITE_KEY, token);
+      const needsSetup =
+        new URLSearchParams(window.location.search).get("invited") === "1" &&
+        !data.session.user.user_metadata?.["invite_profile_complete"];
+      if (needsSetup) {
+        setName(String(data.session.user.user_metadata?.["display_name"] ?? ""));
+        setEmail(data.session.user.email ?? "");
+        setState("setup");
         return;
       }
-      setState("working");
-      const result = await acceptInvite({ data: { token } });
-      if (cancelled) return;
-      localStorage.removeItem(PENDING_INVITE_KEY);
-      if (result.ok) {
-        localStorage.setItem("discord-cms-current-org", result.orgId);
-        void navigate({ to: "/dashboard", replace: true });
-      } else {
-        setMessage(result.message);
-        setState("error");
-      }
+      await completeAcceptance();
     })();
     return () => {
       cancelled = true;
     };
-  }, [token, navigate]);
+  }, [token]);
 
   const finishInvite = async () => {
+    if (!name.trim()) {
+      toast.error("Enter your name");
+      return;
+    }
     if (password.length < 8) {
       toast.error("Use at least 8 characters");
       return;
@@ -72,22 +87,51 @@ function AcceptInvite() {
     setState("working");
     const { error } = await supabase.auth.updateUser({
       password,
-      data: { invite_password_set: true },
+      data: { display_name: name.trim(), invite_profile_complete: true },
     });
     if (error) {
       setMessage(error.message);
       setState("error");
       return;
     }
-    const result = await acceptInvite({ data: { token } });
-    localStorage.removeItem(PENDING_INVITE_KEY);
-    if (!result.ok) {
-      setMessage(result.message);
-      setState("error");
+    await completeAcceptance();
+  };
+
+  const authenticate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (authMode === "signup" && !name.trim()) {
+      toast.error("Enter your name");
       return;
     }
-    localStorage.setItem("discord-cms-current-org", result.orgId);
-    void navigate({ to: "/dashboard", replace: true });
+    setState("working");
+    if (authMode === "signup") {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/invite/${token}?invited=1`,
+          data: { display_name: name.trim(), invite_profile_complete: true },
+        },
+      });
+      if (error) {
+        setMessage(error.message);
+        setState("signin");
+        return;
+      }
+      if (!data.session) {
+        setState("sent");
+        return;
+      }
+      await completeAcceptance();
+      return;
+    }
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    if (error) {
+      setMessage(error.message);
+      setState("signin");
+      return;
+    }
+    await completeAcceptance();
   };
 
   return (
@@ -97,20 +141,28 @@ function AcceptInvite() {
         {state === "checking" || state === "working" ? (
           <p className="mt-2 text-sm text-muted-foreground">Checking your invitation…</p>
         ) : state === "signin" ? (
-          <>
+          <form className="mt-4 space-y-3 text-left" onSubmit={authenticate}>
             <p className="mt-2 text-sm text-muted-foreground">
-              Sign in or create your account with the invited email address, and you will join
-              automatically.
+              {authMode === "signin"
+                ? "Sign in with the invited email address to join this workspace."
+                : "Create your account with the invited email address. You will join after verification."}
             </p>
-            <Button asChild className="mt-4 w-full">
-              <Link to="/auth">Continue</Link>
+            {authMode === "signup" && <div className="space-y-1.5"><Label htmlFor="new-name">Your name</Label><Input id="new-name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="Alex Rivera" /></div>}
+            <div className="space-y-1.5"><Label htmlFor="invite-email">Email</Label><Input id="invite-email" type="email" required value={email} onChange={(event) => setEmail(event.target.value)} /></div>
+            <div className="space-y-1.5"><Label htmlFor="existing-password">Password</Label><Input id="existing-password" type="password" required minLength={8} value={password} onChange={(event) => setPassword(event.target.value)} /></div>
+            {message && <p className="text-sm text-destructive">{message}</p>}
+            <Button type="submit" className="w-full">{authMode === "signin" ? "Sign in and join" : "Create account"}</Button>
+            <Button type="button" variant="ghost" className="w-full" onClick={() => { setMessage(""); setAuthMode(authMode === "signin" ? "signup" : "signin"); }}>
+              {authMode === "signin" ? "New here? Create an account" : "Already have an account? Sign in"}
             </Button>
-          </>
-        ) : state === "password" ? (
+          </form>
+        ) : state === "setup" ? (
           <div className="mt-4 space-y-3 text-left">
             <p className="text-sm text-muted-foreground">
-              Your email is verified. Choose a password to finish joining this workspace.
+              Your email is verified. Add your name and choose a password to join the workspace.
             </p>
+            <div className="space-y-1.5"><Label htmlFor="invite-name">Your name</Label><Input id="invite-name" required value={name} onChange={(event) => setName(event.target.value)} placeholder="Alex Rivera" /></div>
+            {email && <div className="space-y-1.5"><Label>Email</Label><Input value={email} disabled /></div>}
             <div className="space-y-1.5">
               <Label htmlFor="invite-password">New password</Label>
               <Input
@@ -123,15 +175,19 @@ function AcceptInvite() {
               />
             </div>
             <Button className="w-full" onClick={() => void finishInvite()}>
-              Set password and join
+              Save and join workspace
             </Button>
+          </div>
+        ) : state === "sent" ? (
+          <div className="mt-4 space-y-3">
+            <p className="text-sm text-muted-foreground">Check your email and open the verification link. It will return you here and add you to the workspace.</p>
+            <Button variant="outline" className="w-full" onClick={() => setState("signin")}>Back to sign in</Button>
           </div>
         ) : (
           <>
             <p className="mt-2 text-sm text-destructive">{message}</p>
-            <Button asChild variant="outline" className="mt-4 w-full">
-              <Link to="/auth">Back to sign in</Link>
-            </Button>
+            <Button className="mt-4 w-full" onClick={() => void completeAcceptance()}>Try again</Button>
+            <Button variant="outline" className="mt-2 w-full" onClick={() => setState("signin")}>Sign in with another account</Button>
           </>
         )}
       </div>

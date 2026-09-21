@@ -57,6 +57,62 @@
       "when": 1790005194454,
       "tag": "0007_restrict_approver_post_transitions",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790006150365,
+      "tag": "0008_refresh_invite_function_schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790006273919,
+      "tag": "0009_lock_memberships_and_approver_edits",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790006294817,
+      "tag": "0010_create_workspace_atomically",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790006457201,
+      "tag": "0011_enforce_post_and_media_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790006476786,
+      "tag": "0012_secure_media_file_ownership",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790006556912,
+      "tag": "0013_close_post_workflow_bypasses",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1790006585195,
+      "tag": "0014_correct_audit_post_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1790006622566,
+      "tag": "0015_lock_submitted_post_content",
+      "breakpoints": true
     }
   ]
 }

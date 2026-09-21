@@ -356,16 +356,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       createWorkspace: async (name, kind) => {
         if (!user) throw new Error("Not signed in");
-        const orgId = crypto.randomUUID();
-        const { error } = await supabase
-          .from("organizations")
-          .insert({ id: orgId, name, kind, created_by: user.id, plan: "Free" });
+        const { data: createdOrgId, error } = await supabase.rpc("create_workspace", {
+          _name: name,
+          _kind: kind,
+        });
         if (error) throw error;
-        const { error: memberError } = await supabase
-          .from("org_members")
-          .insert({ org_id: orgId, user_id: user.id, role: "super_admin" });
-        if (memberError) throw memberError;
-        setOrgId(orgId);
+        setOrgId(createdOrgId);
         await refresh();
       },
       setMemberRole: async (userId, nextRole) => {

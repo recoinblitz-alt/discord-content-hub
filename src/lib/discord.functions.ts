@@ -227,12 +227,12 @@ export const publishPost = createServerFn({ method: "POST" })
       "user",
     ]);
     const privileged = role === "super_admin" || role === "admin";
-    const canPublish =
-      privileged ||
-      (role === "approver" && ["approved", "scheduled"].includes(post.status as string)) ||
-      (post.created_by === ctx.userId && post.status === "approved");
+    const canPublish = privileged;
     if (!canPublish) {
       return { ok: false as const, message: "This post needs approval before it can be sent" };
+    }
+    if (!["approved", "scheduled", "failed"].includes(post.status)) {
+      return { ok: false as const, message: "This post is not ready to publish" };
     }
 
     const { deliverPost } = await import("./discord.server");

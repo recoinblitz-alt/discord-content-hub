@@ -36,6 +36,7 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
+  const [pendingInvite, setPendingInvite] = useState<string | null>(null);
 
   const goAfterAuth = () => {
     const pending = localStorage.getItem("relaystack-pending-invite");
@@ -47,6 +48,8 @@ function AuthPage() {
   };
 
   useEffect(() => {
+    const pending = localStorage.getItem("relaystack-pending-invite");
+    setPendingInvite(pending);
     supabase.auth.getSession().then(({ data }) => {
       if (data.session) goAfterAuth();
     });
@@ -63,7 +66,9 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: pendingInvite
+              ? `${window.location.origin}/invite/${pendingInvite}?invited=1`
+              : window.location.origin,
             data: { display_name: name || email.split("@")[0] },
           },
         });
@@ -123,12 +128,14 @@ function AuthPage() {
           <form onSubmit={submit} className="space-y-4 rounded-xl border border-border bg-surface p-6">
             <div>
               <h1 className="font-display text-lg font-semibold">
-                {mode === "signin" ? "Sign in" : "Create your workspace account"}
+                 {mode === "signin" ? "Sign in" : pendingInvite ? "Create your invited account" : "Create your workspace account"}
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {mode === "signin"
                   ? "Welcome back — pick up where your team left off."
-                  : "The first account becomes the owner of a new, empty workspace."}
+                   : pendingInvite
+                     ? "Use the invited email address. After verification, you will join the workspace automatically."
+                     : "The first account becomes the owner of a new, empty workspace."}
               </p>
             </div>
 
