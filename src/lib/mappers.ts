@@ -1,3 +1,4 @@
+import { publicMediaUrl } from "@/lib/public-url";
 import {
   emptyEmbed,
   type AuditEntry,
