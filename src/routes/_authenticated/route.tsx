@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const { ready, loading, organizations } = useStore();
+  const { ready, loading, organizations } = useWorkspace();
 
   if (!ready || (loading && organizations.length === 0)) {
     return (
@@ -36,7 +36,7 @@ function AuthenticatedLayout() {
 }
 
 function CreateWorkspace() {
-  const { createWorkspace, signOut } = useStore();
+  const { createWorkspace, signOut } = useWorkspace();
   const [name, setName] = useState("");
   const [kind, setKind] = useState("Gaming / Esports");
   const [busy, setBusy] = useState(false);

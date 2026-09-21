@@ -12,7 +12,7 @@ import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { fullDate, relative } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { STATUS_LABELS, type PostStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -36,7 +36,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function Dashboard() {
   const { currentOrg, currentUser, orgPosts, state, serverOf, channelOf, memberOf, permissions } =
-    useStore();
+    useWorkspace();
 
   const count = (s: PostStatus) => orgPosts.filter((p) => p.status === s).length;
   const pending = orgPosts.filter((p) => p.status === "pending");

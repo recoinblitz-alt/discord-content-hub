@@ -9,7 +9,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { fullDate, relative } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/approvals")({
   head: () => ({
@@ -31,7 +31,7 @@ export const Route = createFileRoute("/_authenticated/approvals")({
 });
 
 function Approvals() {
-  const { orgPosts, serverOf, channelOf, memberOf, auditOf, transition, permissions } = useStore();
+  const { orgPosts, serverOf, channelOf, memberOf, auditOf, transition, permissions } = useWorkspace();
   const queue = orgPosts
     .filter((p) => p.status === "pending")
     .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));

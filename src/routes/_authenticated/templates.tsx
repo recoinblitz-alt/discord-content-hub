@@ -5,7 +5,7 @@ import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { DiscordPreview } from "@/components/discord-preview";
 import { Button } from "@/components/ui/button";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/templates")({
   head: () => ({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/templates")({
 });
 
 function Templates() {
-  const { orgTemplates, orgServers } = useStore();
+  const { orgTemplates, orgServers } = useWorkspace();
   const [selectedId, setSelectedId] = useState(orgTemplates[0]?.id ?? "");
   const selected = orgTemplates.find((t) => t.id === selectedId) ?? orgTemplates[0];
   const bot = orgServers[0];

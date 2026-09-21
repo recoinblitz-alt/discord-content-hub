@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { fullDate } from "@/lib/format";
-import { uid, useStore } from "@/lib/store";
+import { uid, useWorkspace } from "@/lib/store";
 import {
   DISCORD_COLORS,
   TIMEZONES,
@@ -85,7 +85,7 @@ function Composer() {
     bumpTemplate,
     permissions,
     state,
-  } = useStore();
+  } = useWorkspace();
 
   const existing = postId ? state.posts.find((p) => p.id === postId) : undefined;
   const template = templateId ? state.templates.find((t) => t.id === templateId) : undefined;

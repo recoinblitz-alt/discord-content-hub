@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Check, X } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { ROLE_LABELS, permissionsFor, type Role } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/team")({

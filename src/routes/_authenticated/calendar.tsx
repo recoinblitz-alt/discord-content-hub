@@ -6,7 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { fullDate } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 import { STATUS_LABELS, type Post, type PostStatus } from "@/lib/types";
 
 export const Route = createFileRoute("/_authenticated/calendar")({
@@ -39,7 +39,7 @@ function startOfWeek(d: Date) {
 }
 
 function CalendarPage() {
-  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf } = useStore();
+  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf } = useWorkspace();
   const [view, setView] = useState<"month" | "week" | "list">("month");
   const [cursor, setCursor] = useState(() => new Date());
   const [serverId, setServerId] = useState("all");

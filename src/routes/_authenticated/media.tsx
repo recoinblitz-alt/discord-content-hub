@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fullDate } from "@/lib/format";
-import { useStore } from "@/lib/store";
+import { useWorkspace } from "@/lib/store";
 
 export const Route = createFileRoute("/_authenticated/media")({
   head: () => ({
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/media")({
 });
 
 function Media() {
-  const { orgMedia, addMedia, removeMedia } = useStore();
+  const { orgMedia, addMedia, removeMedia } = useWorkspace();
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [kind, setKind] = useState<"banner" | "thumbnail" | "icon">("banner");
