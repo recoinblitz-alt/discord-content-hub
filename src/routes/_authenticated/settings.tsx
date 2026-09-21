@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
 interface BotGuild {
   id: string;
   name: string;
-  icon: string | null;
+  iconUrl: string;
 }
 
 function Settings() {
@@ -67,7 +67,7 @@ function Settings() {
   const test = useServerFn(sendTestMessage);
 
   const [token, setToken] = useState("");
-  const [bot, setBot] = useState<{ name: string; avatar: string | null } | null>(null);
+  const [bot, setBot] = useState<{ name: string; avatar: string } | null>(null);
   const [guilds, setGuilds] = useState<BotGuild[]>([]);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -79,9 +79,13 @@ function Settings() {
     setBusy("verify");
     try {
       const result = await inspect({ data: { orgId: currentOrg.id, botToken: token.trim() } });
-      setBot({ name: result.bot.name, avatar: result.bot.avatar });
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      setBot({ name: result.bot.username, avatar: result.bot.avatarUrl });
       setGuilds(result.guilds);
-      toast.success(`Connected to ${result.bot.name}`);
+      toast.success(`Connected to ${result.bot.username}`);
       if (result.guilds.length === 0) {
         toast.error("This bot isn't in any server yet — invite it, then verify again");
       }
@@ -95,9 +99,12 @@ function Settings() {
   const importGuild = async (guildId: string) => {
     setBusy(guildId);
     try {
-      await connect({ data: { orgId: currentOrg.id, botToken: token.trim(), guildId } });
+      const result = await connect({
+        data: { orgId: currentOrg.id, botToken: token.trim(), guildId },
+      });
       await refresh();
-      toast.success("Server and channels imported");
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not import that server");
     } finally {
@@ -108,9 +115,10 @@ function Settings() {
   const resync = async (serverId: string) => {
     setBusy(serverId);
     try {
-      await sync({ data: { serverId } });
+      const result = await sync({ data: { serverId } });
       await refresh();
-      toast.success("Channels refreshed");
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not refresh channels");
     } finally {
@@ -121,8 +129,9 @@ function Settings() {
   const sendTest = async (channelId: string) => {
     setBusy(channelId);
     try {
-      await test({ data: { channelId } });
-      toast.success("Test message sent to Discord");
+      const result = await test({ data: { channelId } });
+      if (result.ok) toast.success(result.message);
+      else toast.error(result.message);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Discord refused the test message");
     } finally {
