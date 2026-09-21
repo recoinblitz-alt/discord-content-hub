@@ -361,11 +361,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       transition: async (postId, status, action, note) => {
         const current = data.posts.find((p) => p.id === postId);
-        const patch: Record<string, unknown> = {
+        const patch = {
           status,
           updated_at: new Date().toISOString(),
+          ...(action === "resubmitted" && current ? { revision: current.revision + 1 } : {}),
         };
-        if (action === "resubmitted" && current) patch["revision"] = current.revision + 1;
         const { error } = await supabase.from("posts").update(patch).eq("id", postId);
         if (error) throw error;
         await logAudit(postId, action, note);
