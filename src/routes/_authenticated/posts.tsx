@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PenSquare, Trash2 } from "lucide-react";
+import { PenSquare, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -30,8 +30,9 @@ export const Route = createFileRoute("/_authenticated/posts")({
 });
 
 function Posts() {
-  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf, memberOf, deletePost } =
+  const { orgPosts, orgServers, channelsOfServer, serverOf, channelOf, memberOf, deletePost, publishNow } =
     useWorkspace();
+  const [retrying, setRetrying] = useState("");
   const [status, setStatus] = useState<PostStatus | "all">("all");
   const [serverId, setServerId] = useState("all");
   const [channelId, setChannelId] = useState("all");
@@ -144,12 +145,41 @@ function Posts() {
                 <td className="px-4 py-3 text-muted-foreground">{memberOf(p.authorId)?.name}</td>
                 <td className="px-4 py-3">
                   <StatusBadge status={p.status} />
+                  {p.deliveryNote && (
+                    <div
+                      className={`mt-1 max-w-56 text-[0.6875rem] ${p.status === "failed" ? "text-destructive" : "text-muted-foreground"}`}
+                    >
+                      {p.deliveryNote}
+                    </div>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">
                   {fullDate(p.scheduledAt)}
+                  {p.scheduledAt && <div className="text-[0.6875rem]">{p.timezone}</div>}
                 </td>
                 <td className="px-4 py-3 text-xs text-muted-foreground">{relative(p.updatedAt)}</td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  {p.status === "failed" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={retrying === p.id}
+                      onClick={async () => {
+                        setRetrying(p.id);
+                        try {
+                          const result = await publishNow(p.id);
+                          if (result.ok) toast.success(result.message);
+                          else toast.error(result.message);
+                        } catch (error) {
+                          toast.error(error instanceof Error ? error.message : "Retry failed");
+                        } finally {
+                          setRetrying("");
+                        }
+                      }}
+                    >
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Retry
+                    </Button>
+                  )}
                   <Button
                     size="icon"
                     variant="ghost"

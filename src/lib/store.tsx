@@ -16,6 +16,7 @@ import { publishPost } from "@/lib/discord.functions";
 import {
   mapAudit,
   mapChannel,
+  mapEvent,
   mapMedia,
   mapMember,
   mapOrganization,
@@ -33,6 +34,7 @@ import {
   type MediaAsset,
   type MediaAssetKind,
   type Member,
+  type OrgEvent,
   type Organization,
   type Post,
   type PostStatus,
@@ -77,6 +79,7 @@ interface StoreValue {
   orgMembers: Member[];
   orgTemplates: Template[];
   orgMedia: MediaAsset[];
+  orgEvents: OrgEvent[];
   state: {
     organizations: Organization[];
     members: Member[];
@@ -115,6 +118,10 @@ interface StoreValue {
   saveTemplate: (template: Omit<Template, "id" | "orgId" | "uses">) => Promise<void>;
   removeTemplate: (id: string) => Promise<void>;
   bumpTemplate: (id: string) => Promise<void>;
+  saveEvent: (
+    event: Omit<OrgEvent, "orgId" | "createdBy" | "id"> & { id?: string },
+  ) => Promise<void>;
+  removeEvent: (id: string) => Promise<void>;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -216,9 +223,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const data = dataQuery.data ?? emptyOrgData;
 
+  const eventsQuery = useQuery({
+    queryKey: ["org-events", orgId],
+    enabled: Boolean(orgId),
+    staleTime: 30_000,
+    refetchOnWindowFocus: false,
+    queryFn: async (): Promise<OrgEvent[]> => {
+      const { data: rows, error } = await supabase
+        .from("org_events")
+        .select("*")
+        .eq("org_id", orgId!)
+        .order("starts_at");
+      if (error) throw error;
+      return (rows ?? []).map((row) => mapEvent(row as never));
+    },
+  });
+
+  const events = eventsQuery.data ?? [];
+
   const refresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["org-data"] });
     await queryClient.invalidateQueries({ queryKey: ["memberships"] });
+  }, [queryClient]);
+
+  const refreshEvents = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["org-events"] });
   }, [queryClient]);
 
   const logAudit = useCallback(
@@ -271,6 +300,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orgMembers: data.members,
       orgTemplates: data.templates,
       orgMedia: data.media,
+      orgEvents: events,
       state: {
         organizations: memberships.map((m) => m.org),
         members: data.members,
@@ -433,11 +463,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         await supabase.from("templates").update({ uses: template.uses + 1 }).eq("id", id);
         await refresh();
       },
+      saveEvent: async (event) => {
+        if (!orgId || !user) throw new Error("No workspace");
+        const row = {
+          org_id: orgId,
+          title: event.title,
+          description: event.description,
+          starts_at: event.startsAt,
+          ends_at: event.endsAt,
+          timezone: event.timezone,
+          color: event.color,
+          updated_at: new Date().toISOString(),
+        };
+        const { error } = event.id
+          ? await supabase.from("org_events").update(row).eq("id", event.id)
+          : await supabase.from("org_events").insert({ ...row, created_by: user.id });
+        if (error) throw error;
+        await refreshEvents();
+      },
+      removeEvent: async (id) => {
+        const { error } = await supabase.from("org_events").delete().eq("id", id);
+        if (error) throw error;
+        await refreshEvents();
+      },
     };
   }, [
     authReady,
     data,
     dataQuery.isLoading,
+    events,
     logAudit,
     membershipQuery.isLoading,
     memberships,
@@ -445,6 +499,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     orgId,
     queryClient,
     refresh,
+    refreshEvents,
     user,
   ]);
 

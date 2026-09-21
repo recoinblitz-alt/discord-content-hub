@@ -13,6 +13,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { ChannelPicker } from "@/components/channel-picker";
 import { DiscordPreview } from "@/components/discord-preview";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
@@ -294,18 +295,18 @@ function Composer() {
               </div>
               <div>
                 <Label className="mb-1.5 block text-xs">Channel</Label>
-                <select
+                <ChannelPicker
+                  channels={channels}
                   value={post.channelId}
-                  onChange={(e) => set("channelId", e.target.value)}
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm"
-                >
-                  {channels.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      #{c.name}
-                      {c.requiresApproval ? " · approval" : ""}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(id) => set("channelId", id)}
+                  placeholder={post.serverId ? "Search channels…" : "Connect a server first"}
+                  emptyHint="No channels imported yet"
+                />
+                {channel?.requiresApproval && (
+                  <p className="mt-1 text-[0.6875rem] text-warning">
+                    This channel requires approval before sending.
+                  </p>
+                )}
               </div>
               <div className="sm:col-span-2">
                 <Label className="mb-1.5 block text-xs">Internal title</Label>

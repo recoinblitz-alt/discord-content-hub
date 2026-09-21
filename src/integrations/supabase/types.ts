@@ -138,6 +138,56 @@ export type Database = {
           },
         ]
       }
+      org_events: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          description: string
+          ends_at: string | null
+          id: string
+          org_id: string
+          starts_at: string
+          timezone: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          ends_at?: string | null
+          id?: string
+          org_id: string
+          starts_at: string
+          timezone?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string
+          ends_at?: string | null
+          id?: string
+          org_id?: string
+          starts_at?: string
+          timezone?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_events_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       org_members: {
         Row: {
           created_at: string
@@ -254,6 +304,7 @@ export type Database = {
           attachments: Json
           buttons: Json
           channel_id: string | null
+          claimed_at: string | null
           content: string
           created_at: string
           created_by: string
@@ -276,6 +327,7 @@ export type Database = {
           attachments?: Json
           buttons?: Json
           channel_id?: string | null
+          claimed_at?: string | null
           content?: string
           created_at?: string
           created_by: string
@@ -298,6 +350,7 @@ export type Database = {
           attachments?: Json
           buttons?: Json
           channel_id?: string | null
+          claimed_at?: string | null
           content?: string
           created_at?: string
           created_by?: string
