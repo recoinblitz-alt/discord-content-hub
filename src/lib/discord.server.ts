@@ -151,11 +151,13 @@ export function buildDiscordPayload(post: PostLike) {
     if (hasContent) payload["embeds"] = [embed];
   }
 
-  // Attachments render as real images: fill the main embed's image slot when it's
-  // free, then add extra image-only embeds (Discord allows up to 10 per message).
+  // In "upload" mode the files travel with the message as real Discord uploads,
+  // so they must not be referenced as embed images here.
+  // Otherwise attachments render as embed images: fill the main embed's image slot
+  // when free, then add extra image-only embeds (Discord allows up to 10 per message).
   const attachments = (Array.isArray(post.attachments) ? (post.attachments as string[]) : [])
     .filter((url) => typeof url === "string" && /^https?:\/\//i.test(url));
-  if (attachments.length) {
+  if (attachments.length && post.media_mode !== "upload") {
     const embeds = (payload["embeds"] as Record<string, unknown>[] | undefined) ?? [];
     const queue = [...attachments];
     const first = embeds[0];
