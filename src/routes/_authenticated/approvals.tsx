@@ -39,7 +39,8 @@ function Approvals() {
   const [note, setNote] = useState("");
 
   const selected = orgPosts.find((p) => p.id === selectedId) ?? queue[0];
-  const canReviewSelected = Boolean(selected && selected.authorId !== currentUser.id);
+  const canSelfApprove = currentUser.role === "super_admin" || currentUser.role === "admin";
+  const canReviewSelected = Boolean(selected && (canSelfApprove || selected.authorId !== currentUser.id));
 
   if (!permissions.approve) {
     return (
