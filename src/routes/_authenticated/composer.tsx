@@ -263,6 +263,11 @@ function Composer() {
           <Button size="sm" variant="outline" onClick={saveDraft} disabled={!canEdit}>
             <Save className="h-4 w-4" /> Save
           </Button>
+          {permissions.configureServers && (
+            <Button size="sm" variant="outline" onClick={() => setTemplateDialogOpen(true)}>
+              <BookmarkPlus className="h-4 w-4" /> Save as template
+            </Button>
+          )}
           {(post.status === "draft" || post.status === "changes_requested" || post.status === "rejected") && (
             <Button size="sm" onClick={submit} disabled={!canEdit}>
               <Send className="h-4 w-4" />
