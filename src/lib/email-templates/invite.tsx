@@ -53,12 +53,19 @@ export const InviteEmail = ({
 
 export default InviteEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = { backgroundColor: '#f6f7fb', fontFamily: 'Helvetica, Arial, sans-serif' }
+const container = {
+  padding: '28px 32px',
+  margin: '24px auto',
+  maxWidth: '520px',
+  backgroundColor: '#ffffff',
+  borderRadius: '14px',
+  border: '1px solid #e6e8f0',
+}
 const h1 = {
   fontSize: '22px',
   fontWeight: 'bold' as const,
-  color: '#000000',
+  color: '#141a33',
   margin: '0 0 20px',
 }
 const text = {
@@ -69,10 +76,10 @@ const text = {
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: '#5865F2',
   color: '#ffffff',
   fontSize: '14px',
-  border: '1px solid #000000',
+  border: '1px solid #5865F2',
   borderRadius: '8px',
   padding: '12px 20px',
   textDecoration: 'none',
@@ -81,8 +88,8 @@ const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
 // Rendered as a text child, which React may HTML-escape: keep this CSS free of >, &, and quotes.
 const darkModeCss = `
   @media (prefers-color-scheme: dark) {
-    .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+    .dm-btn { background-color: #5865F2 !important; color: #ffffff !important; }
   }
-  [data-ogsc] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
-  [data-ogsb] .dm-btn { background-color: #ffffff !important; color: #000000 !important; }
+  [data-ogsc] .dm-btn { background-color: #5865F2 !important; color: #ffffff !important; }
+  [data-ogsb] .dm-btn { background-color: #5865F2 !important; color: #ffffff !important; }
 `

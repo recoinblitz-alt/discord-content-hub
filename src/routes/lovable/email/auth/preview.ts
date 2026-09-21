@@ -18,7 +18,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Discord Content Hub"
+const SITE_NAME = "MUNO"
 const ROOT_DOMAIN = "solvextra.com"
 
 // Sample data for preview mode ONLY (not used in actual email sending).

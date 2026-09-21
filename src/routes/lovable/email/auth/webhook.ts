@@ -9,7 +9,7 @@ import { EmailChangeEmail } from '@/lib/email-templates/email-change'
 import { ReauthenticationEmail } from '@/lib/email-templates/reauthentication'
 
 // Configuration
-const SITE_NAME = "Discord Content Hub"
+const SITE_NAME = "MUNO"
 const SENDER_DOMAIN = "notify.solvextra.com"
 const ROOT_DOMAIN = "solvextra.com"
 const FROM_DOMAIN = "solvextra.com"
