@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { CalendarClock, CheckCheck, MessageSquare, Zap } from "lucide-react";
 import { useEffect } from "react";
 
+import { LegalFooter } from "@/components/legal-page";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -92,6 +93,7 @@ function Landing() {
             </div>
           ))}
         </div>
+        <LegalFooter className="mt-16 border-t border-border pt-6" />
       </main>
     </div>
   );

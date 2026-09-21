@@ -18,6 +18,7 @@ import {
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
 
+import { LegalFooter } from "@/components/legal-page";
 import { Button } from "@/components/ui/button";
 import { useWorkspace } from "@/lib/store";
 import { useTheme } from "@/lib/use-theme";
@@ -232,6 +233,7 @@ export function AppShell({
         </div>
       </header>
       <div className="px-5 py-6 md:px-8">{children}</div>
+      <LegalFooter className="border-t border-border px-5 py-5 md:px-8" />
     </div>
   );
 }

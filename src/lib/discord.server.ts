@@ -210,8 +210,8 @@ export interface OutgoingFile {
   blob: Blob;
 }
 
-/** Discord's per-file limit for servers without boosts. */
-export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+/** Discord's per-message file limit for servers without boosts (10 MiB). */
+export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 
 /**
  * Posts a message with real file uploads (multipart/form-data), so images appear
@@ -258,7 +258,8 @@ export async function sendDiscordMessageWithFiles(
 export async function resolveUploadFiles(orgId: string, urls: string[]) {
   const files: OutgoingFile[] = [];
   const leftovers: string[] = [];
-  if (!urls.length) return { files, leftovers };
+  const skipped: { url: string; reason: string }[] = [];
+  if (!urls.length) return { files, leftovers, skipped };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data: assets } = await supabaseAdmin
@@ -267,17 +268,30 @@ export async function resolveUploadFiles(orgId: string, urls: string[]) {
     .eq("org_id", orgId)
     .in("url", urls);
 
+  const fallback = (url: string, reason: string) => {
+    leftovers.push(url);
+    skipped.push({ url, reason });
+  };
+
   for (const url of urls) {
     const asset = assets?.find((a) => a.url === url);
     if (!asset?.storage_path) {
-      leftovers.push(url);
+      fallback(url, "added as a link, not an uploaded file");
+      continue;
+    }
+    if (files.length >= 10) {
+      fallback(url, "more than 10 pictures in one message");
       continue;
     }
     const { data: blob, error } = await supabaseAdmin.storage
       .from("media")
       .download(asset.storage_path);
-    if (error || !blob || blob.size > MAX_UPLOAD_BYTES || files.length >= 10) {
-      leftovers.push(url);
+    if (error || !blob) {
+      fallback(url, "the stored file could not be read");
+      continue;
+    }
+    if (blob.size > MAX_UPLOAD_BYTES) {
+      fallback(url, "over Discord's 10 MB limit");
       continue;
     }
     const ext = asset.storage_path.split(".").pop() ?? "png";
@@ -285,7 +299,90 @@ export async function resolveUploadFiles(orgId: string, urls: string[]) {
     const filename = base.toLowerCase().endsWith(`.${ext.toLowerCase()}`) ? base : `${base}.${ext}`;
     files.push({ filename, blob });
   }
-  return { files, leftovers };
+  return { files, leftovers, skipped };
+}
+
+export interface GuildRole {
+  id: string;
+  name: string;
+  color: string;
+  position: number;
+}
+
+export interface GuildMemberRow {
+  userId: string;
+  username: string;
+  globalName: string;
+  displayName: string;
+  isBot: boolean;
+  joinedAt: string;
+  roleIds: string[];
+  roleNames: string[];
+}
+
+const MEMBERS_INTENT_HINT =
+  "Discord refused the member list. Open the Discord Developer Portal, pick this bot, and switch on \"Server Members Intent\" under Bot → Privileged Gateway Intents, then try again.";
+
+export async function fetchGuildRoles(token: string, guildId: string): Promise<GuildRole[]> {
+  const roles = (await discordFetch(token, `/guilds/${guildId}/roles`)) as {
+    id: string;
+    name: string;
+    color: number;
+    position: number;
+  }[];
+  return roles
+    .map((r) => ({
+      id: r.id,
+      name: r.name,
+      color: `#${(r.color ?? 0).toString(16).padStart(6, "0")}`,
+      position: r.position,
+    }))
+    .sort((a, b) => b.position - a.position);
+}
+
+/** Pages through every member of a guild (1000 per request). */
+export async function fetchGuildMembers(token: string, guildId: string) {
+  const roles = await fetchGuildRoles(token, guildId);
+  const roleName = new Map(roles.map((r) => [r.id, r.name]));
+  const members: GuildMemberRow[] = [];
+  let after = "0";
+
+  try {
+    for (let page = 0; page < 200; page += 1) {
+      const batch = (await discordFetch(
+        token,
+        `/guilds/${guildId}/members?limit=1000&after=${after}`,
+      )) as {
+        user: { id: string; username: string; global_name?: string | null; bot?: boolean };
+        nick?: string | null;
+        joined_at: string;
+        roles: string[];
+      }[];
+      if (!Array.isArray(batch) || batch.length === 0) break;
+      for (const m of batch) {
+        members.push({
+          userId: m.user.id,
+          username: m.user.username,
+          globalName: m.user.global_name ?? "",
+          displayName: m.nick || m.user.global_name || m.user.username,
+          isBot: m.user.bot === true,
+          joinedAt: m.joined_at,
+          roleIds: m.roles ?? [],
+          roleNames: (m.roles ?? []).map((id) => roleName.get(id) ?? id),
+        });
+      }
+      const last = batch[batch.length - 1];
+      if (!last) break;
+      after = last.user.id;
+      if (batch.length < 1000) break;
+    }
+  } catch (err) {
+    const status = (err as DiscordError).status;
+    if (status === 403 || status === 401) throw new Error(MEMBERS_INTENT_HINT);
+    throw err;
+  }
+
+  return { members, roles };
 }
 
 export { BUTTON_STYLE };
@@ -321,9 +418,14 @@ export async function deliverPost(postId: string) {
   try {
     const urls = Array.isArray(post.attachments) ? (post.attachments as string[]) : [];
     const wantsUpload = (post as { media_mode?: string | null }).media_mode === "upload";
-    const { files, leftovers } = wantsUpload
+    const { files, leftovers, skipped } = wantsUpload
       ? await resolveUploadFiles(post.org_id, urls)
-      : { files: [] as OutgoingFile[], leftovers: urls };
+      : { files: [] as OutgoingFile[], leftovers: urls, skipped: [] as { url: string; reason: string }[] };
+    const skipNote = skipped.length
+      ? ` — ${skipped.length} picture${skipped.length > 1 ? "s" : ""} sent as embed image instead (${[
+          ...new Set(skipped.map((s) => s.reason)),
+        ].join("; ")})`
+      : "";
 
     // Anything that couldn't be uploaded still shows up as an embed image.
     const payload = buildDiscordPayload({
@@ -342,7 +444,7 @@ export async function deliverPost(postId: string) {
         status: "published",
         published_at: now,
         discord_message_id: messageId,
-        failure_reason: `Delivered to #${channel.name}`,
+        failure_reason: `Delivered to #${channel.name}${skipNote}`,
         updated_at: now,
       })
       .eq("id", postId);
@@ -350,9 +452,9 @@ export async function deliverPost(postId: string) {
       post_id: postId,
       org_id: post.org_id,
       action: "published",
-      note: `Delivered to #${channel.name} (message ${messageId})`,
+      note: `Delivered to #${channel.name} (message ${messageId})${skipNote}`,
     });
-    return { ok: true, message: `Delivered to #${channel.name}` };
+    return { ok: true, message: `Delivered to #${channel.name}${skipNote}` };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Discord rejected the message";
     await supabaseAdmin
