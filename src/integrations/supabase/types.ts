@@ -14,16 +14,502 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      channels: {
+        Row: {
+          created_at: string
+          discord_id: string
+          id: string
+          name: string
+          org_id: string
+          requires_approval: boolean
+          server_id: string
+        }
+        Insert: {
+          created_at?: string
+          discord_id: string
+          id?: string
+          name: string
+          org_id: string
+          requires_approval?: boolean
+          server_id: string
+        }
+        Update: {
+          created_at?: string
+          discord_id?: string
+          id?: string
+          name?: string
+          org_id?: string
+          requires_approval?: boolean
+          server_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channels_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invites_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_assets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name: string
+          org_id: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_assets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_members: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kind: string
+          name: string
+          plan: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kind?: string
+          name: string
+          plan?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kind?: string
+          name?: string
+          plan?: string
+        }
+        Relationships: []
+      }
+      post_audit: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          org_id: string
+          post_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          org_id: string
+          post_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          org_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_audit_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_audit_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          attachments: Json
+          buttons: Json
+          channel_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          discord_message_id: string | null
+          embed: Json
+          failure_reason: string | null
+          id: string
+          org_id: string
+          published_at: string | null
+          revision: number
+          scheduled_at: string | null
+          server_id: string | null
+          status: Database["public"]["Enums"]["post_status"]
+          timezone: string
+          title: string
+          updated_at: string
+          use_embed: boolean
+        }
+        Insert: {
+          attachments?: Json
+          buttons?: Json
+          channel_id?: string | null
+          content?: string
+          created_at?: string
+          created_by: string
+          discord_message_id?: string | null
+          embed?: Json
+          failure_reason?: string | null
+          id?: string
+          org_id: string
+          published_at?: string | null
+          revision?: number
+          scheduled_at?: string | null
+          server_id?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          timezone?: string
+          title?: string
+          updated_at?: string
+          use_embed?: boolean
+        }
+        Update: {
+          attachments?: Json
+          buttons?: Json
+          channel_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          discord_message_id?: string | null
+          embed?: Json
+          failure_reason?: string | null
+          id?: string
+          org_id?: string
+          published_at?: string | null
+          revision?: number
+          scheduled_at?: string | null
+          server_id?: string | null
+          status?: Database["public"]["Enums"]["post_status"]
+          timezone?: string
+          title?: string
+          updated_at?: string
+          use_embed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          email: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      server_secrets: {
+        Row: {
+          bot_token: string
+          server_id: string
+          updated_at: string
+        }
+        Insert: {
+          bot_token: string
+          server_id: string
+          updated_at?: string
+        }
+        Update: {
+          bot_token?: string
+          server_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_secrets_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: true
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servers: {
+        Row: {
+          bot_avatar_url: string | null
+          bot_id: string | null
+          bot_name: string | null
+          connected: boolean
+          created_at: string
+          guild_id: string | null
+          icon_url: string | null
+          id: string
+          name: string
+          org_id: string
+        }
+        Insert: {
+          bot_avatar_url?: string | null
+          bot_id?: string | null
+          bot_name?: string | null
+          connected?: boolean
+          created_at?: string
+          guild_id?: string | null
+          icon_url?: string | null
+          id?: string
+          name: string
+          org_id: string
+        }
+        Update: {
+          bot_avatar_url?: string | null
+          bot_id?: string | null
+          bot_name?: string | null
+          connected?: boolean
+          created_at?: string
+          guild_id?: string | null
+          icon_url?: string | null
+          id?: string
+          name?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servers_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      templates: {
+        Row: {
+          buttons: Json
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          embed: Json
+          id: string
+          name: string
+          org_id: string
+          use_embed: boolean
+          uses: number
+        }
+        Insert: {
+          buttons?: Json
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          embed?: Json
+          id?: string
+          name: string
+          org_id: string
+          use_embed?: boolean
+          uses?: number
+        }
+        Update: {
+          buttons?: Json
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          embed?: Json
+          id?: string
+          name?: string
+          org_id?: string
+          use_embed?: boolean
+          uses?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "templates_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_org_role: {
+        Args: {
+          _org: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user: string
+        }
+        Returns: boolean
+      }
+      is_org_member: { Args: { _org: string; _user: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "admin" | "approver" | "user"
+      post_status:
+        | "draft"
+        | "pending"
+        | "changes_requested"
+        | "rejected"
+        | "approved"
+        | "scheduled"
+        | "published"
+        | "failed"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +636,19 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "admin", "approver", "user"],
+      post_status: [
+        "draft",
+        "pending",
+        "changes_requested",
+        "rejected",
+        "approved",
+        "scheduled",
+        "published",
+        "failed",
+        "cancelled",
+      ],
+    },
   },
 } as const

@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1789965260688,
+      "tag": "0000_discord_cms_core",
+      "breakpoints": true
+    }
+  ]
 }
