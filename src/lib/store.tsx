@@ -460,7 +460,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           const { data: result, error } = await supabase.rpc("review_post", {
             _post: postId,
             _decision: action,
-            _note: note ?? null,
+            _note: note,
           });
           if (error) throw error;
           const response = result as { ok?: boolean; message?: string } | null;
