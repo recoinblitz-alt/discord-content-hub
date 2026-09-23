@@ -141,6 +141,13 @@
       "when": 1790016392830,
       "tag": "0019_approver_can_schedule_on_approval",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790136322734,
+      "tag": "0020_atomic_reviews_and_schedule_guards",
+      "breakpoints": true
     }
   ]
 }

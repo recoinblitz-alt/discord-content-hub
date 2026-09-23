@@ -591,6 +591,10 @@ export type Database = {
         Returns: boolean
       }
       is_org_member: { Args: { _org: string; _user: string }; Returns: boolean }
+      review_post: {
+        Args: { _decision: string; _note?: string; _post: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "approver" | "user"
