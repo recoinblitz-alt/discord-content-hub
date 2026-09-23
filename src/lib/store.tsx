@@ -219,10 +219,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const dataQuery = useQuery({
     queryKey: ["org-data", orgId, activeMembership?.role],
     enabled: Boolean(orgId && activeMembership),
-    staleTime: 15_000,
+    staleTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: true,
-    refetchInterval: 20_000,
+    refetchInterval: 120_000,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<OrgData> => {
       const id = orgId!;
@@ -271,9 +271,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const eventsQuery = useQuery({
     queryKey: ["org-events", orgId],
     enabled: Boolean(orgId),
-    staleTime: 15_000,
+    staleTime: 0,
     refetchOnWindowFocus: true,
-    refetchInterval: 20_000,
+    refetchInterval: 120_000,
     refetchIntervalInBackground: false,
     queryFn: async (): Promise<OrgEvent[]> => {
       const { data: rows, error } = await supabase
@@ -288,9 +288,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const events = eventsQuery.data ?? [];
 
+  useEffect(() => {
+    if (!orgId) return;
+    const refreshWorkspace = () => {
+      void queryClient.invalidateQueries({ queryKey: ["org-data", orgId] });
+    };
+    const refreshMemberships = () => {
+      void queryClient.invalidateQueries({ queryKey: ["memberships"] });
+      refreshWorkspace();
+    };
+    const channel = supabase
+      .channel(`workspace-live-${orgId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "posts", filter: `org_id=eq.${orgId}` }, refreshWorkspace)
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_audit", filter: `org_id=eq.${orgId}` }, refreshWorkspace)
+      .on("postgres_changes", { event: "*", schema: "public", table: "channels", filter: `org_id=eq.${orgId}` }, refreshWorkspace)
+      .on("postgres_changes", { event: "*", schema: "public", table: "templates", filter: `org_id=eq.${orgId}` }, refreshWorkspace)
+      .on("postgres_changes", { event: "*", schema: "public", table: "media_assets", filter: `org_id=eq.${orgId}` }, refreshWorkspace)
+      .on("postgres_changes", { event: "*", schema: "public", table: "org_members", filter: `org_id=eq.${orgId}` }, refreshMemberships)
+      .on("postgres_changes", { event: "*", schema: "public", table: "org_events", filter: `org_id=eq.${orgId}` }, () => {
+        void queryClient.invalidateQueries({ queryKey: ["org-events", orgId] });
+      })
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [orgId, queryClient]);
+
   const refresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["org-data"] });
-    await queryClient.invalidateQueries({ queryKey: ["memberships"] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["org-data"] }),
+      queryClient.invalidateQueries({ queryKey: ["memberships"] }),
+      queryClient.invalidateQueries({ queryKey: ["org-events"] }),
+    ]);
   }, [queryClient]);
 
   const refreshEvents = useCallback(async () => {
@@ -426,6 +456,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         await refresh();
       },
       transition: async (postId, status, action, note) => {
+        if (action === "approved" || action === "rejected" || action === "changes_requested") {
+          const { data: result, error } = await supabase.rpc("review_post", {
+            _post: postId,
+            _decision: action,
+            _note: note ?? null,
+          });
+          if (error) throw error;
+          const response = result as { ok?: boolean; message?: string } | null;
+          if (!response?.ok) throw new Error(response?.message ?? "This post was already reviewed.");
+          await refresh();
+          return;
+        }
         const current = data.posts.find((p) => p.id === postId);
         const patch = {
           status,

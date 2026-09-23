@@ -145,6 +145,22 @@ function Composer() {
     setPost((p) => ({ ...p, embed: { ...p.embed, [key]: value } }));
 
   const [busy, setBusy] = useState(false);
+  const scheduleTime = scheduleAt ? new Date(scheduleAt).getTime() : Number.NaN;
+  const scheduleIsPast = Boolean(scheduleAt) && (!Number.isFinite(scheduleTime) || scheduleTime <= Date.now());
+  const reachedPostingTime = Boolean(post.scheduledAt && new Date(post.scheduledAt).getTime() <= Date.now());
+  const isLocked = post.status === "published" || (post.status === "scheduled" && reachedPostingTime);
+
+  const requireFutureSchedule = () => {
+    if (!scheduleAt) {
+      toast.error("Pick the date and time you want this posted");
+      return null;
+    }
+    if (scheduleIsPast) {
+      toast.error("The posting date and time must be in the future");
+      return null;
+    }
+    return new Date(scheduleAt).toISOString();
+  };
 
   const persist = async (next?: Partial<Post>) => {
     const merged = { ...post, ...next } as Post;
@@ -162,6 +178,7 @@ function Composer() {
   };
 
   const run = async (fn: () => Promise<void>) => {
+    if (busy) return;
     setBusy(true);
     try {
       await fn();
@@ -174,6 +191,10 @@ function Composer() {
 
   const saveDraft = () =>
     run(async () => {
+      if (scheduleAt && scheduleIsPast) {
+        toast.error("The posting date and time must be in the future");
+        return;
+      }
       await persist({
         scheduledAt: scheduleAt ? new Date(scheduleAt).toISOString() : post.scheduledAt,
       });
@@ -182,11 +203,8 @@ function Composer() {
 
   const submit = () =>
     run(async () => {
-      if (!scheduleAt) {
-        toast.error("Pick the date and time you want this posted before submitting");
-        return;
-      }
-      const iso = new Date(scheduleAt).toISOString();
+      const iso = requireFutureSchedule();
+      if (!iso) return;
       const merged = await persist({ scheduledAt: iso });
       await transition(
         merged.id,
@@ -203,12 +221,9 @@ function Composer() {
 
   const schedule = () =>
     run(async () => {
-      if (!scheduleAt) {
-        toast.error("Pick a date and time first");
-        return;
-      }
-      const iso = new Date(scheduleAt).toISOString();
-      const merged = await persist({ status: "scheduled", scheduledAt: iso });
+      const iso = requireFutureSchedule();
+      if (!iso) return;
+      const merged = await persist({ scheduledAt: iso });
       await transition(
         merged.id,
         "scheduled",
@@ -256,10 +271,11 @@ function Composer() {
   };
 
 
-  const canEdit =
+  const canEdit = !isLocked && (
     permissions.publishDirectly ||
     post.authorId === currentUser.id ||
-    isNew;
+    isNew
+  );
 
   return (
     <AppShell
@@ -272,7 +288,7 @@ function Composer() {
       actions={
         <>
           <StatusBadge status={post.status} />
-          <Button size="sm" variant="outline" onClick={saveDraft} disabled={!canEdit}>
+          <Button size="sm" variant="outline" onClick={saveDraft} disabled={!canEdit || busy}>
             <Save className="h-4 w-4" /> Save
           </Button>
           {permissions.configureServers && (
@@ -284,7 +300,7 @@ function Composer() {
             <Button
               size="sm"
               onClick={submit}
-              disabled={!canEdit || !scheduleAt}
+              disabled={!canEdit || !scheduleAt || scheduleIsPast || busy}
               title={!scheduleAt ? "Pick a date and time first" : undefined}
             >
               <Send className="h-4 w-4" />
@@ -292,7 +308,7 @@ function Composer() {
             </Button>
           )}
           {(post.status === "approved" || !needsApproval) && post.status !== "published" && (
-            <Button size="sm" variant="secondary" onClick={publish} disabled={!permissions.publishDirectly}>
+            <Button size="sm" variant="secondary" onClick={publish} disabled={!permissions.publishDirectly || busy || isLocked}>
               <Send className="h-4 w-4" /> Publish now
             </Button>
           )}
@@ -848,9 +864,15 @@ function Composer() {
                   <Label className="mb-1.5 block text-xs">Date & time</Label>
                   <DateTimeField
                     disabled={!canEdit}
+                    minDate={new Date().toLocaleDateString("en-CA")}
                     value={scheduleAt}
                     onChange={setScheduleAt}
                   />
+                  {scheduleIsPast && (
+                    <p className="mt-1.5 text-xs font-medium text-destructive">
+                      Choose a date and time in the future.
+                    </p>
+                  )}
                   {!permissions.publishDirectly && (
                     <p className="mt-1.5 text-xs text-muted-foreground">
                       Required — pick the time you want this posted, then submit for approval.
@@ -877,7 +899,7 @@ function Composer() {
                 className="w-full"
                 variant="secondary"
                 onClick={schedule}
-                disabled={!permissions.publishDirectly || (needsApproval && post.status !== "approved")}
+                disabled={!permissions.publishDirectly || (needsApproval && post.status !== "approved") || !scheduleAt || scheduleIsPast || busy || isLocked}
               >
                 <CalendarClock className="h-4 w-4" />
                 {!permissions.publishDirectly

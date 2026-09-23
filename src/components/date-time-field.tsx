@@ -5,13 +5,14 @@ type Props = {
   onChange: (value: string) => void;
   disabled?: boolean;
   id?: string;
+  minDate?: string;
 };
 
 /**
  * Splits a `YYYY-MM-DDTHH:mm` value into separate native date and time
  * inputs. Mobile browsers handle these reliably, unlike `datetime-local`.
  */
-export function DateTimeField({ value, onChange, disabled, id }: Props) {
+export function DateTimeField({ value, onChange, disabled, id, minDate }: Props) {
   const [datePart = "", timePart = ""] = value.split("T");
 
   const emit = (nextDate: string, nextTime: string) => {
@@ -31,6 +32,7 @@ export function DateTimeField({ value, onChange, disabled, id }: Props) {
         type="date"
         className="min-h-11 flex-1 text-base sm:text-sm"
         disabled={disabled}
+        min={minDate}
         value={datePart}
         onChange={(e) => emit(e.target.value, timePart)}
       />

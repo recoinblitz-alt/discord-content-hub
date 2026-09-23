@@ -37,10 +37,14 @@ function Approvals() {
     .sort((a, b) => a.updatedAt.localeCompare(b.updatedAt));
   const [selectedId, setSelectedId] = useState<string | null>(queue[0]?.id ?? null);
   const [note, setNote] = useState("");
+  const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [reviewedIds, setReviewedIds] = useState<Set<string>>(() => new Set());
 
-  const selected = orgPosts.find((p) => p.id === selectedId) ?? queue[0];
+  const visibleQueue = queue.filter((post) => !reviewedIds.has(post.id));
+  const selected = visibleQueue.find((p) => p.id === selectedId) ?? visibleQueue[0];
   const canSelfApprove = currentUser.role === "super_admin" || currentUser.role === "admin";
   const canReviewSelected = Boolean(selected && (canSelfApprove || selected.authorId !== currentUser.id));
+  const expired = Boolean(selected?.scheduledAt && new Date(selected.scheduledAt).getTime() <= Date.now());
 
   if (!permissions.approve) {
     return (
@@ -56,50 +60,53 @@ function Approvals() {
     );
   }
 
-  const act = (
+  const act = async (
     status: "approved" | "rejected" | "changes_requested",
     action: "approved" | "rejected" | "changes_requested",
   ) => {
-    if (!selected) return;
+    if (!selected || reviewingId) return;
     if (status !== "approved" && !note.trim()) {
       toast.error("Add a comment so the creator knows what to change");
       return;
     }
     // Approving a post that already carries a requested time schedules it straight away,
     // so nobody has to reopen the editor just to press "Schedule post".
-    const autoSchedule = status === "approved" && Boolean(selected.scheduledAt);
-    const nextStatus = autoSchedule ? "scheduled" : status;
+    if (expired && status !== "rejected") {
+      toast.error("The requested posting time has passed. Reject this post with a reason.");
+      return;
+    }
     const decisionNote =
-      autoSchedule && !note.trim()
+      status === "approved" && !note.trim()
         ? `Approved and scheduled for ${fullDate(selected.scheduledAt)} ${selected.timezone}`
         : note.trim() || undefined;
-
-    void transition(selected.id, nextStatus, action, decisionNote)
-      .then(() => {
-        setNote("");
-        toast.success(
-          status === "approved"
-            ? autoSchedule
-              ? new Date(selected.scheduledAt ?? 0).getTime() <= Date.now()
-                ? "Approved — delivering to Discord now"
-                : `Approved and scheduled for ${fullDate(selected.scheduledAt)}`
-              : "Approved — add a date and time to schedule it"
-            : status === "rejected"
-              ? "Rejected with feedback"
-              : "Changes requested",
-        );
-        const next = queue.find((p) => p.id !== selected.id);
-        setSelectedId(next?.id ?? null);
-      })
-      .catch((error) => toast.error(error instanceof Error ? error.message : "Review failed"));
+    const activeId = selected.id;
+    setReviewingId(activeId);
+    try {
+      await transition(activeId, status === "approved" ? "scheduled" : status, action, decisionNote);
+      setReviewedIds((ids) => new Set(ids).add(activeId));
+      setNote("");
+      toast.success(
+        status === "approved"
+          ? `Approved and scheduled for ${fullDate(selected.scheduledAt)}`
+          : status === "rejected"
+            ? "Rejected with feedback"
+            : "Changes requested",
+      );
+      const next = visibleQueue.find((p) => p.id !== activeId);
+      setSelectedId(next?.id ?? null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Review failed");
+    } finally {
+      setReviewingId(null);
+    }
   };
 
 
   return (
-    <AppShell title="Approval queue" subtitle={`${queue.length} submissions awaiting review`}>
+    <AppShell title="Approval queue" subtitle={`${visibleQueue.length} submissions awaiting review`}>
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
         <div className="space-y-2">
-          {queue.map((p) => (
+          {visibleQueue.map((p) => (
             <button
               key={p.id}
               onClick={() => setSelectedId(p.id)}
@@ -121,7 +128,7 @@ function Approvals() {
               </p>
             </button>
           ))}
-          {queue.length === 0 && (
+          {visibleQueue.length === 0 && (
             <div className="rounded-xl border border-border bg-surface p-8 text-center text-sm text-muted-foreground">
               Queue is clear. 🎉
             </div>
@@ -147,6 +154,11 @@ function Approvals() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Requested slot: {fullDate(selected.scheduledAt)} {selected.timezone}
               </p>
+              {expired && (
+                <p className="mt-2 text-xs font-medium text-destructive">
+                  This posting time has passed. Rejection with a reason is the only available decision.
+                </p>
+              )}
               <Textarea
                 className="mt-3"
                 rows={3}
@@ -155,13 +167,13 @@ function Approvals() {
                 placeholder="Comment for the creator (required when rejecting or requesting changes)"
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                <Button disabled={!canReviewSelected} onClick={() => act("approved", "approved")}>
-                  <Check className="h-4 w-4" /> Approve
-                </Button>
-                <Button disabled={!canReviewSelected} variant="secondary" onClick={() => act("changes_requested", "changes_requested")}>
+                {!expired && <Button disabled={!canReviewSelected || Boolean(reviewingId)} onClick={() => void act("approved", "approved")}>
+                  <Check className="h-4 w-4" /> {reviewingId ? "Reviewing…" : "Approve"}
+                </Button>}
+                {!expired && <Button disabled={!canReviewSelected || Boolean(reviewingId)} variant="secondary" onClick={() => void act("changes_requested", "changes_requested")}>
                   <MessageSquare className="h-4 w-4" /> Request changes
-                </Button>
-                <Button disabled={!canReviewSelected} variant="destructive" onClick={() => act("rejected", "rejected")}>
+                </Button>}
+                <Button disabled={!canReviewSelected || Boolean(reviewingId)} variant="destructive" onClick={() => void act("rejected", "rejected")}>
                   <X className="h-4 w-4" /> Reject
                 </Button>
                 <Button asChild variant="outline" className="ml-auto">

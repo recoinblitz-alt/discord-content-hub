@@ -1,4 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { createHash, timingSafeEqual } from "node:crypto";
+
+const matchesSecret = (provided: string | undefined, expected: string) => {
+  if (!provided) return false;
+  return timingSafeEqual(
+    createHash("sha256").update(provided).digest(),
+    createHash("sha256").update(expected).digest(),
+  );
+};
 
 export const Route = createFileRoute("/api/public/publish-due")({
   server: {
@@ -6,8 +15,14 @@ export const Route = createFileRoute("/api/public/publish-due")({
       POST: async ({ request }) => {
         const secret = process.env["PUBLISH_CRON_SECRET"];
         const provided = /^Bearer ([^\s,]+)$/.exec(request.headers.get("authorization") ?? "")?.[1];
-        if (!secret || provided !== secret) {
-          return new Response("Unauthorized", { status: 401 });
+        if (!secret) {
+          return Response.json({ ok: false, error: "Delivery authentication is not configured on this server." }, { status: 503 });
+        }
+        if (!matchesSecret(provided, secret)) {
+          return Response.json(
+            { ok: false, error: "Unauthorized. Send the Render PUBLISH_CRON_SECRET as an Authorization Bearer token." },
+            { status: 401, headers: { "WWW-Authenticate": "Bearer" } },
+          );
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
