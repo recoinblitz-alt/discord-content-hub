@@ -20,3 +20,6 @@
 - [ ] Configure the MUNO sender domain and branded authentication emails.
 - [ ] Verify a fresh Render invitation from email through workspace entry.
 - [ ] Fix independent Render scheduled delivery secret and verify scheduled posts publish.
+- [x] Prevent duplicate approvals with one atomic review and one audit entry.
+- [x] Reject past schedules and lock expired or published posts.
+- [x] Refresh workspace data live without manual page reloads.
