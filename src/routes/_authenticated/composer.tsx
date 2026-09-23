@@ -147,8 +147,10 @@ function Composer() {
   const [busy, setBusy] = useState(false);
   const scheduleTime = scheduleAt ? new Date(scheduleAt).getTime() : Number.NaN;
   const scheduleIsPast = Boolean(scheduleAt) && (!Number.isFinite(scheduleTime) || scheduleTime <= Date.now());
-  const reachedPostingTime = Boolean(post.scheduledAt && new Date(post.scheduledAt).getTime() <= Date.now());
-  const isLocked = post.status === "published" || (post.status === "scheduled" && reachedPostingTime);
+  const currentStatus = existing?.status ?? post.status;
+  const currentScheduledAt = existing?.scheduledAt ?? post.scheduledAt;
+  const reachedPostingTime = Boolean(currentScheduledAt && new Date(currentScheduledAt).getTime() <= Date.now());
+  const isLocked = currentStatus === "published" || (currentStatus === "scheduled" && reachedPostingTime);
 
   const requireFutureSchedule = () => {
     if (!scheduleAt) {
@@ -287,7 +289,7 @@ function Composer() {
       }
       actions={
         <>
-          <StatusBadge status={post.status} />
+          <StatusBadge status={currentStatus} />
           <Button size="sm" variant="outline" onClick={saveDraft} disabled={!canEdit || busy}>
             <Save className="h-4 w-4" /> Save
           </Button>

@@ -457,11 +457,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       transition: async (postId, status, action, note) => {
         if (action === "approved" || action === "rejected" || action === "changes_requested") {
-          const { data: result, error } = await supabase.rpc("review_post", {
+          const reviewArgs = {
             _post: postId,
             _decision: action,
-            _note: note,
-          });
+            ...(note === undefined ? {} : { _note: note }),
+          };
+          const { data: result, error } = await supabase.rpc("review_post", reviewArgs);
           if (error) throw error;
           const response = result as { ok?: boolean; message?: string } | null;
           if (!response?.ok) throw new Error(response?.message ?? "This post was already reviewed.");
