@@ -23,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/team")({
         property: "og:description",
         content: "Role-based permissions for Discord content creation and approval.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Team,

@@ -44,6 +44,8 @@ export const Route = createFileRoute("/_authenticated/calendar")({
         property: "og:description",
         content: "Scheduled Discord posts and shared team events across servers and channels.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: CalendarPage,

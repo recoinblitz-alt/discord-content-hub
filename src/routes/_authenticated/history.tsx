@@ -21,6 +21,8 @@ export const Route = createFileRoute("/_authenticated/history")({
         property: "og:description",
         content: "Every creation, revision, approval and delivery event on your Discord posts.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: History,

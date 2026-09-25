@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -64,6 +64,8 @@ export const Route = createFileRoute("/_authenticated/composer")({
         property: "og:description",
         content: "Build Discord embeds with a live preview, buttons, media and scheduling.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Composer,
@@ -145,6 +147,7 @@ function Composer() {
     setPost((p) => ({ ...p, embed: { ...p.embed, [key]: value } }));
 
   const [busy, setBusy] = useState(false);
+  const actionLock = useRef(false);
   const scheduleTime = scheduleAt ? new Date(scheduleAt).getTime() : Number.NaN;
   const scheduleIsPast = Boolean(scheduleAt) && (!Number.isFinite(scheduleTime) || scheduleTime <= Date.now());
   const currentStatus = existing?.status ?? post.status;
@@ -180,13 +183,15 @@ function Composer() {
   };
 
   const run = async (fn: () => Promise<void>) => {
-    if (busy) return;
+    if (busy || actionLock.current) return;
+    actionLock.current = true;
     setBusy(true);
     try {
       await fn();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Something went wrong");
     } finally {
+      actionLock.current = false;
       setBusy(false);
     }
   };

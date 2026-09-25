@@ -29,6 +29,8 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
         property: "og:description",
         content: "Pipeline overview of Discord drafts, approvals and scheduled announcements.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Dashboard,

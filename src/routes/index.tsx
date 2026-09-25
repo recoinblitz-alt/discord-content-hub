@@ -22,6 +22,8 @@ export const Route = createFileRoute("/")({
         content:
           "Live embed builder, approval queue, content calendar and real bot delivery for your Discord servers.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Landing,
