@@ -24,6 +24,8 @@ export const Route = createFileRoute("/_authenticated/posts")({
         property: "og:description",
         content: "Filter Discord posts by server, channel and lifecycle status.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Posts,

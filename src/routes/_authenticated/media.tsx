@@ -23,6 +23,8 @@ export const Route = createFileRoute("/_authenticated/media")({
         property: "og:description",
         content: "Reusable banners and graphics for Discord announcements.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Media,

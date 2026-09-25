@@ -64,6 +64,8 @@ export const Route = createFileRoute("/_authenticated/composer")({
         property: "og:description",
         content: "Build Discord embeds with a live preview, buttons, media and scheduling.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Composer,

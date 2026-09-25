@@ -25,6 +25,8 @@ export const Route = createFileRoute("/_authenticated/approvals")({
         property: "og:description",
         content: "Approve, reject or request changes on pending Discord announcements.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Approvals,

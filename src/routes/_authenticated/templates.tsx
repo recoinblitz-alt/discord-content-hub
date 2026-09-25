@@ -28,6 +28,8 @@ export const Route = createFileRoute("/_authenticated/templates")({
         property: "og:description",
         content: "Reusable Discord announcement templates ready to drop into a post.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Templates,

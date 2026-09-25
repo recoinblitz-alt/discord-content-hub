@@ -23,6 +23,8 @@ export const Route = createFileRoute("/auth")({
         property: "og:description",
         content: "Discord content scheduling and approvals for your team.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: AuthPage,

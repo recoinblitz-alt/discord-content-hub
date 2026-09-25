@@ -45,6 +45,8 @@ export const Route = createFileRoute("/_authenticated/settings")({
         property: "og:description",
         content: "Connect a Discord bot and set per-channel approval rules.",
       },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: Settings,
