@@ -30,6 +30,19 @@ The Blueprint uses:
 - Health check: `/api/public/health` (returns `{"ok":true,...}`)
 - Scheduled publishing: `POST /api/public/publish-due` every minute
 
+### cron-job.org setup
+
+If cron-job.org runs the publisher instead of Render's cron service, configure one job with:
+
+- URL: `https://muno-pea2.onrender.com/api/public/publish-due`
+- Method: `POST`
+- Schedule: every minute
+- Header name: `Authorization`
+- Header value: `Bearer YOUR_RENDER_PUBLISH_CRON_SECRET`
+- Body: empty
+
+`YOUR_RENDER_PUBLISH_CRON_SECRET` must be the exact value saved as `PUBLISH_CRON_SECRET` on the Render web service. A missing or different value returns `401 Unauthorized`. This is an independent shared secret, not a Lovable API key.
+
 Render's Blueprint uses Node.js and npm, so no Bun runtime is required in production.
 
 ## Manual production commands

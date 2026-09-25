@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, MessageSquare, ShieldAlert, X } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -39,6 +39,7 @@ function Approvals() {
   const [note, setNote] = useState("");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [reviewedIds, setReviewedIds] = useState<Set<string>>(() => new Set());
+  const reviewLock = useRef(false);
 
   const visibleQueue = queue.filter((post) => !reviewedIds.has(post.id));
   const selected = visibleQueue.find((p) => p.id === selectedId) ?? visibleQueue[0];
@@ -64,7 +65,7 @@ function Approvals() {
     status: "approved" | "rejected" | "changes_requested",
     action: "approved" | "rejected" | "changes_requested",
   ) => {
-    if (!selected || reviewingId) return;
+    if (!selected || reviewingId || reviewLock.current) return;
     if (status !== "approved" && !note.trim()) {
       toast.error("Add a comment so the creator knows what to change");
       return;
@@ -80,6 +81,7 @@ function Approvals() {
         ? `Approved and scheduled for ${fullDate(selected.scheduledAt)} ${selected.timezone}`
         : note.trim() || undefined;
     const activeId = selected.id;
+    reviewLock.current = true;
     setReviewingId(activeId);
     try {
       await transition(activeId, status === "approved" ? "scheduled" : status, action, decisionNote);
@@ -97,6 +99,7 @@ function Approvals() {
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Review failed");
     } finally {
+      reviewLock.current = false;
       setReviewingId(null);
     }
   };
