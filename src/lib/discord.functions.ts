@@ -278,3 +278,42 @@ export const exportGuildMembers = createServerFn({ method: "POST" })
       };
     }
   });
+
+/** Roles and members for @mention suggestions in the post creator. Any workspace member. */
+export const getMentionDirectory = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { serverId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: server } = await supabaseAdmin
+      .from("servers")
+      .select("id, org_id, guild_id")
+      .eq("id", data.serverId)
+      .single();
+    if (!server?.guild_id) return { roles: [], members: [], note: "Server is not connected" };
+    await assertRole(context as Ctx, server.org_id, ["super_admin", "admin", "approver", "user"]);
+    const { data: secret } = await supabaseAdmin
+      .from("server_secrets")
+      .select("bot_token")
+      .eq("server_id", server.id)
+      .single();
+    if (!secret?.bot_token) return { roles: [], members: [], note: "No bot token saved" };
+
+    const { fetchGuildRoles, fetchMentionMembers } = await import("./discord.server");
+    let roles: { id: string; name: string; color: string }[] = [];
+    let members: { id: string; name: string; username: string; avatar: string }[] = [];
+    let note: string | null = null;
+    try {
+      roles = (await fetchGuildRoles(secret.bot_token, server.guild_id))
+        .filter((r) => r.name !== "@everyone")
+        .map(({ id, name, color }) => ({ id, name, color }));
+    } catch {
+      note = "Couldn't load roles";
+    }
+    try {
+      members = await fetchMentionMembers(secret.bot_token, server.guild_id);
+    } catch {
+      note = "Members unavailable — switch on Server Members Intent for the bot";
+    }
+    return { roles, members, note };
+  });

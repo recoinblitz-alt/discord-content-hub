@@ -45,8 +45,44 @@ export const statusStyles: Record<PostStatus, string> = {
   cancelled: "bg-muted text-muted-foreground border-border",
 };
 
+export interface MentionNames {
+  channels: Map<string, string>;
+  roles: Map<string, { name: string; color: string }>;
+  users: Map<string, string>;
+}
+
+let mentionNames: MentionNames = { channels: new Map(), roles: new Map(), users: new Map() };
+
+/** Lets the preview show real names for <#id>, <@&id> and <@id> mentions. */
+export function setMentionNames(names: MentionNames) {
+  mentionNames = names;
+}
+
+const esc = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
 /** Minimal Discord-flavoured markdown to safe HTML. */
 export function renderMarkdown(input: string): string {
+  const html = renderBase(input);
+  return html
+    .replace(/&lt;#(\d{5,})&gt;/g, (_, id: string) => {
+      const n = mentionNames.channels.get(id);
+      return `<span class="dc-mention">#${esc(n ?? "unknown-channel")}</span>`;
+    })
+    .replace(/&lt;@&amp;(\d{5,})&gt;/g, (_, id: string) => {
+      const r = mentionNames.roles.get(id);
+      if (!r) return '<span class="dc-mention">@unknown-role</span>';
+      const c = r.color !== "#000000" ? r.color : "";
+      const style = c ? ` style="color:${c};background:${c}26"` : "";
+      return `<span class="dc-mention"${style}>@${esc(r.name)}</span>`;
+    })
+    .replace(/&lt;@!?(\d{5,})&gt;/g, (_, id: string) => {
+      const n = mentionNames.users.get(id);
+      return `<span class="dc-mention">@${esc(n ?? "unknown-user")}</span>`;
+    });
+}
+
+function renderBase(input: string): string {
   const escaped = input
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
