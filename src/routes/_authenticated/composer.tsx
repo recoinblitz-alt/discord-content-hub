@@ -10,7 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
@@ -27,9 +27,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-import { fullDate } from "@/lib/format";
+import { MentionTextarea, type MentionDirectory } from "@/components/mention-textarea";
+import { getMentionDirectory } from "@/lib/discord.functions";
+import { fullDate, setMentionNames } from "@/lib/format";
 import { uid, useWorkspace } from "@/lib/store";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import {
   DISCORD_COLORS,
   TIMEZONES,
@@ -136,6 +139,33 @@ function Composer() {
 
   const channels = post.serverId ? channelsOfServer(post.serverId) : [];
   const server = serverOf(post.serverId);
+
+  const fetchMentions = useServerFn(getMentionDirectory);
+  const mentionQuery = useQuery({
+    queryKey: ["mention-directory", post.serverId],
+    queryFn: () => fetchMentions({ data: { serverId: post.serverId } }),
+    enabled: Boolean(post.serverId),
+    staleTime: 10 * 60_000,
+  });
+  const channelKey = channels.map((c) => c.id).join(",");
+  const mentionDir = useMemo<MentionDirectory>(
+    () => ({
+      channels: channels.map((c) => ({ id: c.discordId, name: c.name })),
+      roles: mentionQuery.data?.roles ?? [],
+      members: mentionQuery.data?.members ?? [],
+      note: mentionQuery.data?.note ?? null,
+      serverChosen: Boolean(post.serverId),
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [channelKey, mentionQuery.data, post.serverId],
+  );
+  useEffect(() => {
+    setMentionNames({
+      channels: new Map(mentionDir.channels.map((c) => [c.id, c.name])),
+      roles: new Map(mentionDir.roles.map((r) => [r.id, { name: r.name, color: r.color }])),
+      users: new Map(mentionDir.members.map((m) => [m.id, m.name])),
+    });
+  }, [mentionDir]);
   const channel = channelOf(post.channelId);
   const needsApproval = channel?.requiresApproval ?? false;
   const history = useMemo(() => auditOf(post.id), [auditOf, post.id]);
