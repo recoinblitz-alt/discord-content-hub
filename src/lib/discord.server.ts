@@ -470,3 +470,19 @@ export async function deliverPost(postId: string) {
     return { ok: false, message };
   }
 }
+
+/** First 1000 members (enough for suggestions) with display names and avatars. */
+export async function fetchMentionMembers(token: string, guildId: string) {
+  const batch = (await discordFetch(token, `/guilds/${guildId}/members?limit=1000`)) as {
+    user: { id: string; username: string; global_name?: string | null; avatar?: string | null; bot?: boolean };
+    nick?: string | null;
+  }[];
+  return batch.map((m) => ({
+    id: m.user.id,
+    name: m.nick || m.user.global_name || m.user.username,
+    username: m.user.username,
+    avatar: m.user.avatar
+      ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=64`
+      : `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(m.user.id) >> 22n) % 6}.png`,
+  }));
+}
