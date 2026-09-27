@@ -102,6 +102,5 @@ function renderBase(input: string): string {
     .replace(/__([^_]+)__/g, "<u>$1</u>")
     .replace(/~~([^~]+)~~/g, "<s>$1</s>")
     .replace(/(@everyone|@here)/g, '<span class="dc-mention">$1</span>')
-    .replace(/&lt;#([a-z0-9-]+)&gt;/gi, '<span class="dc-mention">#$1</span>')
     .replace(/\n/g, "<br/>");
 }
