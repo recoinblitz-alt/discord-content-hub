@@ -28,7 +28,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MentionTextarea, type MentionDirectory } from "@/components/mention-textarea";
-import { getMentionDirectory } from "@/lib/discord.functions";
+import { editPublishedPost, getMentionDirectory, resendPublishedPost } from "@/lib/discord.functions";
+import { PenLine } from "lucide-react";
 import { fullDate, setMentionNames } from "@/lib/format";
 import { uid, useWorkspace } from "@/lib/store";
 import { useQuery } from "@tanstack/react-query";
@@ -99,6 +100,7 @@ function Composer() {
     saveTemplate,
     permissions,
     state,
+    refresh,
   } = useWorkspace();
 
   const existing = postId ? state.posts.find((p) => p.id === postId) : undefined;
@@ -178,6 +180,11 @@ function Composer() {
 
   const [busy, setBusy] = useState(false);
   const actionLock = useRef(false);
+  const [editingPublished, setEditingPublished] = useState(false);
+  const [editNote, setEditNote] = useState("");
+  const [messageMissing, setMessageMissing] = useState(false);
+  const editPublishedFn = useServerFn(editPublishedPost);
+  const resendFn = useServerFn(resendPublishedPost);
   const scheduleTime = scheduleAt ? new Date(scheduleAt).getTime() : Number.NaN;
   const scheduleIsPast = Boolean(scheduleAt) && (!Number.isFinite(scheduleTime) || scheduleTime <= Date.now());
   const currentStatus = existing?.status ?? post.status;
@@ -308,11 +315,59 @@ function Composer() {
   };
 
 
-  const canEdit = !isLocked && (
+  const canEditPublished =
+    currentStatus === "published" && permissions.publishDirectly && Boolean(existing?.publishedAt);
+  const canEdit = editingPublished || (!isLocked && (
     permissions.publishDirectly ||
     post.authorId === currentUser.id ||
     isNew
-  );
+  ));
+
+  const cancelPublishedEdit = () => {
+    if (existing) setPost(structuredClone(existing));
+    setEditingPublished(false);
+    setEditNote("");
+  };
+
+  const updateInDiscord = () =>
+    run(async () => {
+      const result = await editPublishedFn({
+        data: {
+          postId: post.id,
+          note: editNote,
+          patch: {
+            title: post.title,
+            content: post.content,
+            use_embed: post.kind === "embed",
+            embed: post.embed,
+            buttons: post.buttons,
+            attachments: post.attachments,
+            media_mode: post.mediaMode,
+          },
+        },
+      });
+      if (result.ok) {
+        toast.success(result.message);
+        setEditingPublished(false);
+        setEditNote("");
+        setMessageMissing(false);
+        await refresh();
+      } else {
+        toast.error(result.message);
+        if (result.missing) setMessageMissing(true);
+      }
+    });
+
+  const resendAsNew = () =>
+    run(async () => {
+      const result = await resendFn({ data: { postId: post.id } });
+      if (result.ok) {
+        toast.success(result.message);
+        setMessageMissing(false);
+        setEditingPublished(false);
+      } else toast.error(result.message);
+      await refresh();
+    });
 
   return (
     <AppShell
@@ -347,6 +402,26 @@ function Composer() {
           {(post.status === "approved" || !needsApproval) && post.status !== "published" && (
             <Button size="sm" variant="secondary" onClick={publish} disabled={!permissions.publishDirectly || busy || isLocked}>
               <Send className="h-4 w-4" /> Publish now
+            </Button>
+          )}
+          {canEditPublished && !editingPublished && (
+            <Button size="sm" variant="secondary" onClick={() => setEditingPublished(true)} disabled={busy}>
+              <PenLine className="h-4 w-4" /> Edit published post
+            </Button>
+          )}
+          {editingPublished && (
+            <>
+              <Button size="sm" variant="ghost" onClick={cancelPublishedEdit} disabled={busy}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={updateInDiscord} disabled={busy}>
+                <Send className="h-4 w-4" /> Update in Discord
+              </Button>
+            </>
+          )}
+          {messageMissing && canEditPublished && (
+            <Button size="sm" variant="outline" onClick={resendAsNew} disabled={busy}>
+              <Send className="h-4 w-4" /> Send again as a new message
             </Button>
           )}
         </>
