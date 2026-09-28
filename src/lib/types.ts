@@ -99,6 +99,7 @@ export interface DiscordEmbed {
 export type AuditAction =
   | "created"
   | "updated"
+  | "edited"
   | "submitted"
   | "approved"
   | "rejected"
@@ -138,6 +139,7 @@ export interface Post {
   timezone: string;
   publishedAt: string | null;
   deliveryNote: string | null;
+  editedAt?: string | null;
   revision: number;
   createdAt: string;
   updatedAt: string;
