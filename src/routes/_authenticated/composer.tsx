@@ -430,6 +430,26 @@ function Composer() {
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,560px)]">
         {/* ── Editor ─────────────────────────────── */}
         <fieldset disabled={!canEdit} className="min-w-0 space-y-5">
+          {currentStatus === "published" && (existing?.editedAt || editingPublished) && (
+            <div className="space-y-2 rounded-xl border border-border bg-surface-2 p-4 text-sm">
+              {existing?.editedAt && (
+                <p className="text-muted-foreground">Edited {fullDate(existing.editedAt)}</p>
+              )}
+              {editingPublished && (
+                <>
+                  <p>
+                    You're editing a message that's already in Discord. Text, embed, buttons and images can change.
+                    Server, channel and time stay the same.
+                  </p>
+                  <Input
+                    placeholder="Reason for the edit (optional)"
+                    value={editNote}
+                    onChange={(e) => setEditNote(e.target.value)}
+                  />
+                </>
+              )}
+            </div>
+          )}
           {feedback.length > 0 && post.status === "changes_requested" && (
             <div className="rounded-xl border border-info/40 bg-info/10 p-4">
               <h3 className="text-sm font-semibold text-info">Changes requested</h3>
