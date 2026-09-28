@@ -471,6 +471,88 @@ export async function deliverPost(postId: string) {
   }
 }
 
+export interface PublishedEditPatch {
+  title: string;
+  content: string;
+  use_embed: boolean;
+  embed: unknown;
+  buttons: unknown;
+  attachments: string[];
+  media_mode: "upload" | "embed";
+}
+
+/** Edits an already delivered Discord message in place, then saves the new version. */
+export async function editDeliveredPost(postId: string, patch: PublishedEditPatch, actorId: string, note?: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: post } = await supabaseAdmin.from("posts").select("*").eq("id", postId).single();
+  if (!post) return { ok: false, message: "Post not found", missing: false };
+  if (post.status !== "published" || !post.discord_message_id || !post.channel_id)
+    return { ok: false, message: "Only posts sent by MUNO can be edited in Discord", missing: false };
+  const { data: channel } = await supabaseAdmin.from("channels").select("discord_id, name, server_id").eq("id", post.channel_id).single();
+  if (!channel) return { ok: false, message: "Channel is no longer connected", missing: false };
+  const { data: secret } = await supabaseAdmin.from("server_secrets").select("bot_token").eq("server_id", channel.server_id).single();
+  if (!secret?.bot_token) return { ok: false, message: "This server has no bot token saved", missing: false };
+
+  try {
+    const wantsUpload = patch.media_mode === "upload";
+    const { files, leftovers } = wantsUpload
+      ? await resolveUploadFiles(post.org_id, patch.attachments)
+      : { files: [] as OutgoingFile[], leftovers: patch.attachments };
+    const payload = buildDiscordPayload({ ...patch, attachments: leftovers, media_mode: "embed" } as unknown as PostLike);
+    // Replace the old file list with exactly the new uploads.
+    payload["attachments"] = files.slice(0, 10).map((f, id) => ({ id, filename: f.filename }));
+    if (!payload["components"]) payload["components"] = [];
+    if (!payload["embeds"]) payload["embeds"] = [];
+    if (!payload["content"]) payload["content"] = "";
+    const path = `${API}/channels/${channel.discord_id}/messages/${post.discord_message_id}`;
+    let res: Response;
+    if (files.length) {
+      const form = new FormData();
+      form.append("payload_json", JSON.stringify(payload));
+      files.slice(0, 10).forEach((f, i) => form.append(`files[${i}]`, f.blob, f.filename));
+      res = await fetch(path, { method: "PATCH", headers: { Authorization: `Bot ${secret.bot_token}` }, body: form });
+    } else {
+      res = await fetch(path, {
+        method: "PATCH",
+        headers: { Authorization: `Bot ${secret.bot_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+    }
+    if (!res.ok) {
+      if (res.status === 404)
+        return { ok: false, message: "This message no longer exists in Discord (it may have been deleted).", missing: true };
+      if (res.status === 403)
+        return { ok: false, message: "The bot no longer has access to this channel.", missing: false };
+      let detail = await res.text();
+      try { detail = (JSON.parse(detail) as { message?: string }).message ?? detail; } catch { /* raw */ }
+      return { ok: false, message: detail || `Discord error ${res.status}`, missing: false };
+    }
+    const now = new Date().toISOString();
+    const { error } = await supabaseAdmin
+      .from("posts")
+      .update({ ...patch, embed: patch.embed as never, buttons: patch.buttons as never, revision: (post.revision ?? 1) + 1, edited_at: now, updated_at: now })
+      .eq("id", postId);
+    if (error) return { ok: false, message: "Discord was updated, but saving the new version failed: " + error.message, missing: false };
+    await supabaseAdmin.from("post_audit").insert({
+      post_id: postId,
+      org_id: post.org_id,
+      actor_id: actorId,
+      action: "edited",
+      note: note?.trim() ? `Edited in Discord — ${note.trim()}` : `Edited in Discord (#${channel.name})`,
+    });
+    return { ok: true, message: `Updated in #${channel.name}`, missing: false };
+  } catch (err) {
+    return { ok: false, message: err instanceof Error ? err.message : "Discord rejected the edit", missing: false };
+  }
+}
+
+/** Resets a published post whose Discord message is gone so it can be sent again. */
+export async function resendDeletedPost(postId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("posts").update({ status: "approved", discord_message_id: null, published_at: null }).eq("id", postId);
+  return deliverPost(postId);
+}
+
 /** First 1000 members (enough for suggestions) with display names and avatars. */
 export async function fetchMentionMembers(token: string, guildId: string) {
   const batch = (await discordFetch(token, `/guilds/${guildId}/members?limit=1000`)) as {

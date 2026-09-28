@@ -239,6 +239,62 @@ export const publishPost = createServerFn({ method: "POST" })
     return deliverPost(data.postId);
   });
 
+/** Admin-only: edit a published post and update the same Discord message. */
+export const editPublishedPost = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      postId: string;
+      note?: string;
+      patch: {
+        title: string;
+        content: string;
+        use_embed: boolean;
+        embed: unknown;
+        buttons: unknown;
+        attachments: string[];
+        media_mode: "upload" | "embed";
+      };
+    }) => {
+      if (!input?.postId || !input.patch) throw new Error("Invalid edit");
+      const p = input.patch;
+      return {
+        postId: String(input.postId),
+        note: typeof input.note === "string" ? input.note.slice(0, 500) : undefined,
+        patch: {
+          title: String(p.title ?? "Untitled post").slice(0, 200),
+          content: String(p.content ?? "").slice(0, 2000),
+          use_embed: Boolean(p.use_embed),
+          embed: p.embed ?? {},
+          buttons: Array.isArray(p.buttons) ? p.buttons : [],
+          attachments: Array.isArray(p.attachments) ? p.attachments.filter((u) => typeof u === "string").slice(0, 10) : [],
+          media_mode: p.media_mode === "upload" ? ("upload" as const) : ("embed" as const),
+        },
+      };
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: post } = await ctx.supabase.from("posts").select("id, org_id").eq("id", data.postId).single();
+    if (!post) return { ok: false, message: "Post not found", missing: false };
+    await assertRole(ctx, post.org_id, ["super_admin", "admin"]);
+    const { editDeliveredPost } = await import("./discord.server");
+    return editDeliveredPost(data.postId, data.patch, ctx.userId, data.note);
+  });
+
+/** Admin-only: send a published post again when its Discord message was deleted. */
+export const resendPublishedPost = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { postId: string }) => ({ postId: String(input.postId) }))
+  .handler(async ({ data, context }) => {
+    const ctx = context as Ctx;
+    const { data: post } = await ctx.supabase.from("posts").select("id, org_id, status").eq("id", data.postId).single();
+    if (!post || post.status !== "published") return { ok: false, message: "Post not found" };
+    await assertRole(ctx, post.org_id, ["super_admin", "admin"]);
+    const { resendDeletedPost } = await import("./discord.server");
+    return resendDeletedPost(data.postId);
+  });
+
 /** Super-admin-only: export every member of a connected Discord server. */
 export const exportGuildMembers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

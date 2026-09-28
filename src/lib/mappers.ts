@@ -104,6 +104,7 @@ export function mapPost(row: Row): Post {
     timezone: str(row["timezone"], "UTC"),
     publishedAt: typeof row["published_at"] === "string" ? row["published_at"] : null,
     deliveryNote: typeof row["failure_reason"] === "string" ? row["failure_reason"] : null,
+    editedAt: typeof row["edited_at"] === "string" ? row["edited_at"] : null,
     revision: typeof row["revision"] === "number" ? row["revision"] : 1,
     createdAt: str(row["created_at"]),
     updatedAt: str(row["updated_at"]),

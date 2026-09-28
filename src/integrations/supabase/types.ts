@@ -322,6 +322,7 @@ export type Database = {
           created_at: string
           created_by: string
           discord_message_id: string | null
+          edited_at: string | null
           embed: Json
           failure_reason: string | null
           id: string
@@ -346,6 +347,7 @@ export type Database = {
           created_at?: string
           created_by: string
           discord_message_id?: string | null
+          edited_at?: string | null
           embed?: Json
           failure_reason?: string | null
           id?: string
@@ -370,6 +372,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           discord_message_id?: string | null
+          edited_at?: string | null
           embed?: Json
           failure_reason?: string | null
           id?: string
