@@ -373,3 +373,110 @@ export const getMentionDirectory = createServerFn({ method: "POST" })
     }
     return { roles, members, note };
   });
+
+/* ---------------- Discord commands & approvals ---------------- */
+
+async function serverForAdmin(context: Ctx, serverId: string) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data: server } = await supabaseAdmin
+    .from("servers")
+    .select("id, org_id, guild_id, bot_id")
+    .eq("id", serverId)
+    .single();
+  if (!server) throw new Error("Server not found");
+  await assertRole(context, server.org_id, ["super_admin", "admin"]);
+  return { server, supabaseAdmin };
+}
+
+export const getBotSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { serverId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { server, supabaseAdmin } = await serverForAdmin(context as Ctx, data.serverId);
+    const { data: row } = await supabaseAdmin
+      .from("discord_bot_settings")
+      .select("*")
+      .eq("server_id", server.id)
+      .maybeSingle();
+    return {
+      publicKey: row?.public_key ?? "",
+      commandChannelId: row?.command_channel_id ?? "",
+      approvalChannelId: row?.approval_channel_id ?? "",
+      submitRoleIds: row?.submit_role_ids ?? [],
+      approveRoleIds: row?.approve_role_ids ?? [],
+      timezone: row?.timezone ?? "Asia/Kolkata",
+      registeredAt: row?.commands_registered_at ?? null,
+    };
+  });
+
+export const saveBotSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      serverId: string;
+      publicKey: string;
+      commandChannelId: string;
+      approvalChannelId: string;
+      submitRoleIds: string[];
+      approveRoleIds: string[];
+      timezone: string;
+    }) => {
+      const key = input.publicKey.trim();
+      if (key && !/^[0-9a-f]{64}$/i.test(key)) throw new Error("The public key should be 64 letters/numbers (0-9, a-f)");
+      const snow = (v: string) => (/^\d{5,25}$/.test(v) ? v : "");
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: input.timezone });
+      } catch {
+        throw new Error("Unknown timezone");
+      }
+      return {
+        ...input,
+        publicKey: key,
+        commandChannelId: snow(input.commandChannelId),
+        approvalChannelId: snow(input.approvalChannelId),
+        submitRoleIds: input.submitRoleIds.filter((r) => /^\d{5,25}$/.test(r)).slice(0, 50),
+        approveRoleIds: input.approveRoleIds.filter((r) => /^\d{5,25}$/.test(r)).slice(0, 50),
+      };
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const { server, supabaseAdmin } = await serverForAdmin(context as Ctx, data.serverId);
+    const { error } = await supabaseAdmin.from("discord_bot_settings").upsert({
+      server_id: server.id,
+      org_id: server.org_id,
+      public_key: data.publicKey,
+      command_channel_id: data.commandChannelId || null,
+      approval_channel_id: data.approvalChannelId || null,
+      submit_role_ids: data.submitRoleIds,
+      approve_role_ids: data.approveRoleIds,
+      timezone: data.timezone,
+      updated_at: new Date().toISOString(),
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const registerBotCommands = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { serverId: string }) => input)
+  .handler(async ({ data, context }) => {
+    const { server, supabaseAdmin } = await serverForAdmin(context as Ctx, data.serverId);
+    if (!server.guild_id || !server.bot_id) return { ok: false, message: "Reconnect this server first" };
+    const { data: secret } = await supabaseAdmin
+      .from("server_secrets")
+      .select("bot_token")
+      .eq("server_id", server.id)
+      .single();
+    if (!secret?.bot_token) return { ok: false, message: "No bot token saved" };
+    const { registerGuildCommands } = await import("./discord-interactions.server");
+    try {
+      await registerGuildCommands(secret.bot_token, server.bot_id, server.guild_id);
+    } catch (err) {
+      return { ok: false, message: err instanceof Error ? err.message : "Discord refused the commands" };
+    }
+    await supabaseAdmin
+      .from("discord_bot_settings")
+      .update({ commands_registered_at: new Date().toISOString() })
+      .eq("server_id", server.id);
+    return { ok: true, message: "Commands added to your server" };
+  });
