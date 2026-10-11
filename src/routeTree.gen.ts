@@ -33,6 +33,7 @@ import { Route as ApiPublicPublishDueRouteImport } from './routes/api/public/pub
 import { Route as ApiPublicMediaSplatRouteImport } from './routes/api/public/media/$'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as ApiPublicDiscordInteractionsServerIdRouteImport } from './routes/api/public/discord/interactions.$serverId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -153,6 +154,12 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDiscordInteractionsServerIdRoute =
+  ApiPublicDiscordInteractionsServerIdRouteImport.update({
+    id: '/api/public/discord/interactions/$serverId',
+    path: '/api/public/discord/interactions/$serverId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -178,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/api/public/discord/interactions/$serverId': typeof ApiPublicDiscordInteractionsServerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -203,6 +211,7 @@ export interface FileRoutesByTo {
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/api/public/discord/interactions/$serverId': typeof ApiPublicDiscordInteractionsServerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -230,6 +239,7 @@ export interface FileRoutesById {
   '/api/public/media/$': typeof ApiPublicMediaSplatRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/api/public/discord/interactions/$serverId': typeof ApiPublicDiscordInteractionsServerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/api/public/discord/interactions/$serverId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/api/public/discord/interactions/$serverId'
   id:
     | '__root__'
     | '/'
@@ -308,6 +320,7 @@ export interface FileRouteTypes {
     | '/api/public/media/$'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/api/public/discord/interactions/$serverId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -325,6 +338,7 @@ export interface RootRouteChildren {
   ApiPublicMediaSplatRoute: typeof ApiPublicMediaSplatRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  ApiPublicDiscordInteractionsServerIdRoute: typeof ApiPublicDiscordInteractionsServerIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -497,6 +511,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/discord/interactions/$serverId': {
+      id: '/api/public/discord/interactions/$serverId'
+      path: '/api/public/discord/interactions/$serverId'
+      fullPath: '/api/public/discord/interactions/$serverId'
+      preLoaderRoute: typeof ApiPublicDiscordInteractionsServerIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -544,6 +565,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicMediaSplatRoute: ApiPublicMediaSplatRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  ApiPublicDiscordInteractionsServerIdRoute:
+    ApiPublicDiscordInteractionsServerIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

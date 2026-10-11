@@ -4,7 +4,7 @@ export interface DiscordError extends Error {
   status?: number;
 }
 
-async function discordFetch(token: string, path: string, init?: RequestInit) {
+export async function discordFetch(token: string, path: string, init?: RequestInit) {
   const res = await fetch(`${API}${path}`, {
     ...init,
     headers: {
