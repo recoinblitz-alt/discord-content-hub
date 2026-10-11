@@ -16,6 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/app-shell";
+import { DiscordCommandsSettings } from "@/components/discord-commands-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -339,6 +340,7 @@ function Settings() {
                       </li>
                     ))}
                   </ul>
+                  <DiscordCommandsSettings serverId={server.id} channels={channels} />
                 </div>
               );
             })
