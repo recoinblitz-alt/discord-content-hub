@@ -59,6 +59,60 @@ export type Database = {
           },
         ]
       }
+      discord_bot_settings: {
+        Row: {
+          approval_channel_id: string | null
+          approve_role_ids: string[]
+          command_channel_id: string | null
+          commands_registered_at: string | null
+          org_id: string
+          public_key: string
+          server_id: string
+          submit_role_ids: string[]
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          approval_channel_id?: string | null
+          approve_role_ids?: string[]
+          command_channel_id?: string | null
+          commands_registered_at?: string | null
+          org_id: string
+          public_key?: string
+          server_id: string
+          submit_role_ids?: string[]
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_channel_id?: string | null
+          approve_role_ids?: string[]
+          command_channel_id?: string | null
+          commands_registered_at?: string | null
+          org_id?: string
+          public_key?: string
+          server_id?: string
+          submit_role_ids?: string[]
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discord_bot_settings_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discord_bot_settings_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: true
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invites: {
         Row: {
           accepted_at: string | null
@@ -322,6 +376,7 @@ export type Database = {
           created_at: string
           created_by: string
           discord_message_id: string | null
+          discord_review_message_id: string | null
           edited_at: string | null
           embed: Json
           failure_reason: string | null
@@ -347,6 +402,7 @@ export type Database = {
           created_at?: string
           created_by: string
           discord_message_id?: string | null
+          discord_review_message_id?: string | null
           edited_at?: string | null
           embed?: Json
           failure_reason?: string | null
@@ -372,6 +428,7 @@ export type Database = {
           created_at?: string
           created_by?: string
           discord_message_id?: string | null
+          discord_review_message_id?: string | null
           edited_at?: string | null
           embed?: Json
           failure_reason?: string | null
