@@ -3,7 +3,7 @@ import { discordFetch } from "./discord.server";
 const EPHEMERAL = 64;
 const ADMINISTRATOR = 8n;
 
-type Json = Record<string, any>;
+type Json = any;
 
 export interface BotSettings {
   server_id: string;
