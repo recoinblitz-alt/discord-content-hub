@@ -3,7 +3,7 @@ import { discordFetch } from "./discord.server";
 const EPHEMERAL = 64;
 const ADMINISTRATOR = 8n;
 
-type Json = Record<string, any>;
+type Json = any;
 
 export interface BotSettings {
   server_id: string;
@@ -251,7 +251,7 @@ async function createSubmission(
     cardNote = "\nAdmins will review it in MUNO.";
   }
   return reply(
-    `✅ Sent for approval — posts to #${channel.name} at ${formatWhen(post.scheduled_at, settings.timezone)} once approved.${cardNote}`,
+    `✅ Sent for approval — posts to #${channel.name} at ${formatWhen(post.scheduled_at ?? when.toISOString(), settings.timezone)} once approved.${cardNote}`,
   );
 }
 
