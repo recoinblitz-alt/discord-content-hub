@@ -251,7 +251,7 @@ async function createSubmission(
     cardNote = "\nAdmins will review it in MUNO.";
   }
   return reply(
-    `✅ Sent for approval — posts to #${channel.name} at ${formatWhen(post.scheduled_at, settings.timezone)} once approved.${cardNote}`,
+    `✅ Sent for approval — posts to #${channel.name} at ${formatWhen(post.scheduled_at ?? when.toISOString(), settings.timezone)} once approved.${cardNote}`,
   );
 }
 
