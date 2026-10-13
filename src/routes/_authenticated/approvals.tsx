@@ -74,8 +74,8 @@ function Approvals() {
     }
     // Approving a post that already carries a requested time schedules it straight away,
     // so nobody has to reopen the editor just to press "Schedule post".
-    if (expired && status !== "rejected") {
-      toast.error("The requested posting time has passed. Reject this post with a reason.");
+    if (expired && status === "changes_requested") {
+      toast.error("The requested time has passed. Approve to post right away, or reject.");
       return;
     }
     const decisionNote =
@@ -161,7 +161,7 @@ function Approvals() {
               </p>
               {expired && (
                 <p className="mt-2 text-xs font-medium text-destructive">
-                  This posting time has passed. Rejection with a reason is the only available decision.
+                  This requested time has passed. Approving will post it right away.
                 </p>
               )}
               <Textarea
@@ -172,9 +172,9 @@ function Approvals() {
                 placeholder="Comment for the creator (required when rejecting or requesting changes)"
               />
               <div className="mt-3 flex flex-wrap gap-2">
-                {!expired && <Button disabled={!canReviewSelected || Boolean(reviewingId)} onClick={() => void act("approved", "approved")}>
-                  <Check className="h-4 w-4" /> {reviewingId ? "Reviewing…" : "Approve"}
-                </Button>}
+                <Button disabled={!canReviewSelected || Boolean(reviewingId)} onClick={() => void act("approved", "approved")}>
+                  <Check className="h-4 w-4" /> {reviewingId ? "Reviewing…" : expired ? "Approve & post now" : "Approve"}
+                </Button>
                 {!expired && <Button disabled={!canReviewSelected || Boolean(reviewingId)} variant="secondary" onClick={() => void act("changes_requested", "changes_requested")}>
                   <MessageSquare className="h-4 w-4" /> Request changes
                 </Button>}
