@@ -112,7 +112,7 @@ export function parseScheduleTime(input: string, timeZone: string): Date | null 
 
   // relative: 10m, 2h, 1h30m, in 15 mins, 1 day
   const rel = text.replace(/^in /, "");
-  const relRe = /(\d+)\s*(d|day|days|h|hr|hrs|hour|hours|m|min|mins|minute|minutes)\b/g;
+  const relRe = /(\d+)\s*(d|day|days|h|hr|hrs|hour|hours|m|min|mins|minute|minutes)(?=\d|\s|$)/g;
   if (/^(\d+\s*[a-z]+\s*)+$/.test(rel)) {
     let ms = 0;
     let matched = "";
