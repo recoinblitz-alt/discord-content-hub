@@ -243,7 +243,7 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
       {
         title: "📋 New post waiting for approval",
         color: 0x5865f2,
-        description: String(post.content || "(no text)").slice(0, 3500),
+        description: String(post.content || (post.use_embed ? "(embed only)" : "(no text)")).slice(0, 3500),
         fields: [
           { name: "Submitted by", value: author, inline: true },
           { name: "Posts to", value: `#${channelName}`, inline: true },
@@ -251,6 +251,7 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
         ],
         footer: { text: `MUNO · ${post.id}` },
       },
+      ...(post.use_embed && post.embed ? [previewEmbed(post.embed)] : []),
     ],
     components: [
       {
@@ -262,6 +263,19 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
       },
     ],
   };
+}
+
+function previewEmbed(e: Json) {
+  const out: Json = { color: Number.parseInt(String(e.color ?? "#5865F2").replace("#", ""), 16) || 0x5865f2 };
+  if (e.title) out.title = String(e.title).slice(0, 256);
+  if (e.description) out.description = String(e.description).slice(0, 4000);
+  if (e.authorName) out.author = { name: e.authorName, ...(e.authorIcon ? { icon_url: e.authorIcon } : {}) };
+  if (e.image) out.image = { url: e.image };
+  if (e.thumbnail) out.thumbnail = { url: e.thumbnail };
+  if (e.footerText) out.footer = { text: e.footerText };
+  const fields = (e.fields ?? []).filter((f: Json) => f.name && f.value).slice(0, 25);
+  if (fields.length) out.fields = fields.map((f: Json) => ({ name: f.name, value: f.value, inline: !!f.inline }));
+  return out;
 }
 
 function decidedCard(original: Json | undefined, line: string, color: number) {
@@ -277,14 +291,15 @@ async function createSubmission(
   settings: BotSettings,
   channelDiscordId: string,
   timeText: string,
-  content: string,
+  source: Extracted,
 ): Promise<string> {
   const db = await admin();
   const when = parseScheduleTime(timeText, settings.timezone);
   if (!when) return `⚠️ I couldn't read the time "${timeText}". ${TIME_HELP}`;
   if (when.getTime() <= Date.now() + 30_000) return `⚠️ That time has already passed. ${TIME_HELP}`;
-  const text = content.trim();
-  if (!text) return "⚠️ The message is empty.";
+  const text = source.content.trim();
+  const embed = source.embed ?? null;
+  if (!text && !embed) return "⚠️ The message is empty.";
   if (text.length > 2000) return "⚠️ Discord messages can be at most 2000 characters.";
 
   const { data: channel } = await db
@@ -307,7 +322,8 @@ async function createSubmission(
       channel_id: channel.id,
       title: `Discord request from ${who.name}`.slice(0, 200),
       content: text,
-      use_embed: false,
+      use_embed: !!embed,
+      ...(embed ? { embed: embed as never } : {}),
       status: "pending",
       scheduled_at: when.toISOString(),
       timezone: settings.timezone,
@@ -475,10 +491,45 @@ async function fetchMessage(token: string, channelId: string, messageId: string)
   }
 }
 
-function messageText(msg: Json) {
+export interface Extracted {
+  content: string;
+  embed?: Record<string, unknown> | null;
+}
+
+const hex = (n: unknown) =>
+  typeof n === "number" ? `#${n.toString(16).padStart(6, "0").toUpperCase()}` : "#5865F2";
+
+/** Converts a Discord message embed into MUNO's embed format (text, fields, colour, images). */
+function toMunoEmbed(e: Json): Record<string, unknown> | null {
+  if (!e || typeof e !== "object") return null;
+  const embed = {
+    authorName: String(e.author?.name ?? ""),
+    authorIcon: String(e.author?.icon_url ?? ""),
+    title: String(e.title ?? ""),
+    titleUrl: String(e.url ?? ""),
+    description: String(e.description ?? ""),
+    color: hex(e.color),
+    thumbnail: String(e.thumbnail?.url ?? ""),
+    image: String(e.image?.url ?? e.image?.proxy_url ?? ""),
+    fields: (Array.isArray(e.fields) ? e.fields : []).map((f: Json, i: number) => ({
+      id: `f${i}`,
+      name: String(f?.name ?? ""),
+      value: String(f?.value ?? ""),
+      inline: f?.inline === true,
+    })),
+    footerText: String(e.footer?.text ?? ""),
+    footerIcon: String(e.footer?.icon_url ?? ""),
+    showTimestamp: Boolean(e.timestamp),
+  };
+  const has = embed.title || embed.description || embed.fields.length || embed.image || embed.thumbnail || embed.authorName;
+  return has ? embed : null;
+}
+
+function messageText(msg: Json): Extracted {
   const parts = [String(msg?.content ?? "")];
   for (const a of msg?.attachments ?? []) if (a?.url) parts.push(String(a.url));
-  return parts.filter(Boolean).join("\n").slice(0, 2000);
+  const rich = (msg?.embeds ?? []).find((e: Json) => !e?.type || e.type === "rich");
+  return { content: parts.filter(Boolean).join("\n").slice(0, 2000), embed: toMunoEmbed(rich) };
 }
 
 /**
@@ -489,16 +540,16 @@ async function resolveMessageText(
   interaction: Json,
   settings: BotSettings,
   typed: string,
-): Promise<{ ok: true; content: string } | { ok: false; error: string }> {
+): Promise<{ ok: true; msg: Extracted } | { ok: false; error: string }> {
   const text = typed.trim();
   const link = text.match(/^https?:\/\/(?:\w+\.)?discord(?:app)?\.com\/channels\/\d+\/(\d+)\/(\d+)\/?$/);
-  if (text && !link) return { ok: true, content: text };
+  if (text && !link) return { ok: true, msg: { content: text } };
   const token = await botToken(settings.server_id);
   if (!token) return { ok: false, error: "⚠️ The bot isn't connected in MUNO." };
   if (link) {
     const msg = await fetchMessage(token, link[1]!, link[2]!);
     if (!msg) return { ok: false, error: "⚠️ I couldn't open that message link. Make sure the bot can see that channel." };
-    return { ok: true, content: messageText(msg) };
+    return { ok: true, msg: messageText(msg) };
   }
   const me = userTag(interaction).id;
   let recent: Json[] = [];
@@ -507,13 +558,13 @@ async function resolveMessageText(
   } catch {
     return { ok: false, error: "⚠️ I can't read this channel. Give the bot **Read Message History** here, or type the message." };
   }
-  const mine = recent.find((m) => m?.author?.id === me && (m.content || m.attachments?.length));
+  const mine = recent.find((m) => m?.author?.id === me && (m.content || m.attachments?.length || m.embeds?.length));
   if (!mine)
     return {
       ok: false,
       error: "⚠️ I couldn't find a recent message from you here. Send your announcement first, then run `/schedule` without a message.",
     };
-  return { ok: true, content: messageText(mine) };
+  return { ok: true, msg: messageText(mine) };
 }
 
 /* ---------------- entry ---------------- */
@@ -536,7 +587,7 @@ export async function handleInteraction(interaction: Json, settings: BotSettings
         return deferred(interaction, async () => {
           const text = await resolveMessageText(interaction, settings, opts["message"] ?? "");
           if (!text.ok) return text.error;
-          return createSubmission(interaction, settings, opts["channel"] ?? "", opts["time"] ?? "", text.content);
+          return createSubmission(interaction, settings, opts["channel"] ?? "", opts["time"] ?? "", text.msg);
         });
       }
       const targetId = String(interaction.data?.target_id ?? "");
@@ -598,8 +649,8 @@ export async function handleInteraction(interaction: Json, settings: BotSettings
           (channels ?? []).find((c) => c.name.toLowerCase() === wanted) ??
           (channels ?? []).find((c) => c.name.toLowerCase().includes(wanted));
         if (!wanted || !match) return `⚠️ I couldn't find a channel called "${values["channel"]}".`;
-        let content = values["message"] ?? "";
-        if (!content && srcChannel && srcMessage) {
+        let content: Extracted = { content: values["message"] ?? "" };
+        if (!content.content && srcChannel && srcMessage) {
           const token = await botToken(settings.server_id);
           const msg = token ? await fetchMessage(token, srcChannel, srcMessage) : null;
           if (!msg) return "⚠️ I couldn't read that message. Make sure the bot can see this channel.";
