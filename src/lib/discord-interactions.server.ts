@@ -243,7 +243,7 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
       {
         title: "📋 New post waiting for approval",
         color: 0x5865f2,
-        description: String(post.content || "(no text)").slice(0, 3500),
+        description: String(post.content || (post.use_embed ? "(embed only)" : "(no text)")).slice(0, 3500),
         fields: [
           { name: "Submitted by", value: author, inline: true },
           { name: "Posts to", value: `#${channelName}`, inline: true },
@@ -251,6 +251,7 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
         ],
         footer: { text: `MUNO · ${post.id}` },
       },
+      ...(post.use_embed && post.embed ? [previewEmbed(post.embed)] : []),
     ],
     components: [
       {
@@ -262,6 +263,19 @@ function reviewCard(post: Json, channelName: string, author: string, timeZone: s
       },
     ],
   };
+}
+
+function previewEmbed(e: Json) {
+  const out: Json = { color: Number.parseInt(String(e.color ?? "#5865F2").replace("#", ""), 16) || 0x5865f2 };
+  if (e.title) out.title = String(e.title).slice(0, 256);
+  if (e.description) out.description = String(e.description).slice(0, 4000);
+  if (e.authorName) out.author = { name: e.authorName, ...(e.authorIcon ? { icon_url: e.authorIcon } : {}) };
+  if (e.image) out.image = { url: e.image };
+  if (e.thumbnail) out.thumbnail = { url: e.thumbnail };
+  if (e.footerText) out.footer = { text: e.footerText };
+  const fields = (e.fields ?? []).filter((f: Json) => f.name && f.value).slice(0, 25);
+  if (fields.length) out.fields = fields.map((f: Json) => ({ name: f.name, value: f.value, inline: !!f.inline }));
+  return out;
 }
 
 function decidedCard(original: Json | undefined, line: string, color: number) {
@@ -573,7 +587,7 @@ export async function handleInteraction(interaction: Json, settings: BotSettings
         return deferred(interaction, async () => {
           const text = await resolveMessageText(interaction, settings, opts["message"] ?? "");
           if (!text.ok) return text.error;
-          return createSubmission(interaction, settings, opts["channel"] ?? "", opts["time"] ?? "", text.content);
+          return createSubmission(interaction, settings, opts["channel"] ?? "", opts["time"] ?? "", text.msg);
         });
       }
       const targetId = String(interaction.data?.target_id ?? "");
@@ -635,8 +649,8 @@ export async function handleInteraction(interaction: Json, settings: BotSettings
           (channels ?? []).find((c) => c.name.toLowerCase() === wanted) ??
           (channels ?? []).find((c) => c.name.toLowerCase().includes(wanted));
         if (!wanted || !match) return `⚠️ I couldn't find a channel called "${values["channel"]}".`;
-        let content = values["message"] ?? "";
-        if (!content && srcChannel && srcMessage) {
+        let content: Extracted = { content: values["message"] ?? "" };
+        if (!content.content && srcChannel && srcMessage) {
           const token = await botToken(settings.server_id);
           const msg = token ? await fetchMessage(token, srcChannel, srcMessage) : null;
           if (!msg) return "⚠️ I couldn't read that message. Make sure the bot can see this channel.";
