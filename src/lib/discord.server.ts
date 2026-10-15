@@ -302,6 +302,35 @@ export async function resolveUploadFiles(orgId: string, urls: string[]) {
   return { files, leftovers, skipped };
 }
 
+const CDN_IMAGE_RE =
+  /https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/attachments\/[^\s<>]+?\.(png|jpe?g|gif|webp)(?:\?[^\s<>]*)?/gi;
+
+/**
+ * Pulls Discord-hosted image links out of the text and downloads them so they can be
+ * re-uploaded as plain `image.ext` files — Discord then shows a normal inline photo
+ * with no filename link above it.
+ */
+export async function extractCdnImages(text: string) {
+  const files: OutgoingFile[] = [];
+  let cleaned = text;
+  const matches = [...text.matchAll(CDN_IMAGE_RE)];
+  for (const m of matches) {
+    if (files.length >= 10) break;
+    try {
+      const res = await fetch(m[0]);
+      if (!res.ok) continue;
+      const blob = await res.blob();
+      if (blob.size > MAX_UPLOAD_BYTES) continue;
+      const ext = (m[1] ?? "png").toLowerCase().replace("jpeg", "jpg");
+      files.push({ filename: files.length ? `image${files.length}.${ext}` : `image.${ext}`, blob });
+      cleaned = cleaned.replace(m[0], "");
+    } catch {
+      /* keep the link if it can't be downloaded */
+    }
+  }
+  return { files, cleaned: cleaned.replace(/\n{3,}/g, "\n\n").trim() };
+}
+
 export interface GuildRole {
   id: string;
   name: string;
@@ -427,9 +456,15 @@ export async function deliverPost(postId: string) {
         ].join("; ")})`
       : "";
 
+    // Discord image links pasted in the text get re-uploaded as clean files.
+    const rawContent = String((post as { content?: string | null }).content ?? "");
+    const cdn = await extractCdnImages(rawContent);
+    files.push(...cdn.files.slice(0, Math.max(0, 10 - files.length)));
+
     // Anything that couldn't be uploaded still shows up as an embed image.
     const payload = buildDiscordPayload({
       ...(post as Record<string, unknown>),
+      content: cdn.cleaned,
       attachments: leftovers,
       media_mode: "embed",
     } as unknown as PostLike);
